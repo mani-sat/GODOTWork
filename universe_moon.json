@@ -1,0 +1,935 @@
+{
+    "version": "3.0",
+    "spacetime": {
+        "system": "BCRS",
+        "ephem": "de432"
+    },
+    "mappings": [],
+    "ephemeris": [
+        {
+            "name": "de432",
+            "files": [
+                "test_data/ephemeris/de432.jpl"
+            ]
+        }
+    ],
+    "constants": {
+        "ephemeris": [
+            {
+                "source": "de432"
+            }
+        ]
+    },
+    "stations": [
+        {
+            "name": "earthStations",
+            "file": "test_data/database/GroundStationsDatabase.json"
+        }
+    ],
+    "frames": [
+        {
+            "name": "ephem1",
+            "type": "Ephem",
+            "config": {
+                "source": "de432"
+            }
+        },
+        {
+            "name": "ITRF",
+            "type": "AxesOrient",
+            "config": {
+                "model": "IERS2000",
+                "nutation": "test_data/orient/nutation2000A.ipf",
+                "erp": "test_data/orient/erp2000A.ipf"
+            }
+        },
+        {
+            "name": "Juice_OrbIpf_RAC",
+            "type": "AxesLocalOrbital",
+            "config": {
+                "center": "Earth",
+                "target": "Juice_OrbIpf",
+                "axes": "RAC"
+            }
+        },
+        {
+            "name": "Juice_OrbIpf_TCN",
+            "type": "AxesLocalOrbital",
+            "config": {
+                "center": "Earth",
+                "target": "Juice_OrbIpf",
+                "axes": "TCN"
+            }
+        },
+        {
+            "name": "Juice_CoM_RAC",
+            "type": "AxesLocalOrbital",
+            "config": {
+                "center": "Earth",
+                "target": "Juice_CoM",
+                "axes": "RAC"
+            }
+        },
+        {
+            "name": "Juice_CoM_TCN",
+            "type": "AxesLocalOrbital",
+            "config": {
+                "center": "Earth",
+                "target": "Juice_CoM",
+                "axes": "TCN"
+            }
+        },
+        {
+            "name": "Moon",
+            "type": "AxesOrient",
+            "config": {
+                "model": "MoonIAU2009"
+            }
+        },
+        {
+            "name": "Mercury",
+            "type": "AxesOrient",
+            "config": {
+                "model": "MercuryIAU2009"
+            }
+        },
+        {
+            "name": "Venus",
+            "type": "AxesOrient",
+            "config": {
+                "model": "VenusIAU2009"
+            }
+        },
+        {
+            "name": "Mars",
+            "type": "AxesOrient",
+            "config": {
+                "model": "MarsIAU2009"
+            }
+        },
+        {
+            "name": "Jupiter",
+            "type": "AxesOrient",
+            "config": {
+                "model": "JupiterIAU2009"
+            }
+        },
+        {
+            "name": "Saturn",
+            "type": "AxesOrient",
+            "config": {
+                "model": "SaturnIAU2009"
+            }
+        },
+        {
+            "name": "Neptune",
+            "type": "AxesOrient",
+            "config": {
+                "model": "NeptuneIAU2009"
+            }
+        },
+        {
+            "name": "Uranus",
+            "type": "AxesOrient",
+            "config": {
+                "model": "UranusIAU2009"
+            }
+        },
+        {
+            "name": "stations1",
+            "type": "Stations",
+            "config": {
+                "source": "earthStations",
+                "lorentz": true,
+                "tides": [
+                    {
+                        "active": true,
+                        "model": "solidEarth",
+                        "ephem": "de432"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "EMC",
+            "type": "AxesOrient",
+            "config": {
+                "model": "EMCJ2000"
+            }
+        },
+        {
+            "name": "EclipticNorth",
+            "type": "DirFixed",
+            "config": {
+                "axes": "EMC",
+                "vector": [
+                    0,
+                    0,
+                    1
+                ]
+            }
+        },
+        {
+            "name": "Mercury",
+            "type": "PointAlias",
+            "config": {
+                "target": "MercuryBarycenter"
+            }
+        },
+        {
+            "name": "Venus",
+            "type": "PointAlias",
+            "config": {
+                "target": "VenusBarycenter"
+            }
+        },
+        {
+            "name": "Juice_OrbIpf",
+            "type": "PointIpf",
+            "config": {
+                "file": "test_data/orb/juice/jui.orb"
+            }
+        },
+        {
+            "name": "Juice_AttIpf",
+            "type": "AxesIpf",
+            "config": {
+                "file": "test_data/orb/juice/jui.att"
+            }
+        },
+        {
+            "name": "Juice_SA_Normal_Dir",
+            "type": "DirVector",
+            "config": {
+                "axes": "Juice_AttIpf",
+                "vector": [
+                    "0 - cos(SA_PY_Angle)",
+                    "0",
+                    "0 - sin(SA_PY_Angle)"
+                ]
+            }
+        },
+        {
+            "name": "Juice_CoM_Sun_Dir",
+            "type": "DirPosition",
+            "config": {
+                "origin": "Juice_CoM",
+                "target": "Sun"
+            }
+        },
+        {
+            "name": "Juice_SRPFrame",
+            "type": "AxesAlias",
+            "config": {
+                "target": "Juice_AttIpf"
+            }
+        },
+        {
+            "name": "Juice_scFrameOrigin",
+            "type": "PointParameterizedConstantTranslation",
+            "config": {
+                "origin": "Juice_Participant",
+                "axes": "Juice_AttIpf",
+                "vector": [
+                    "0 - Juice_CoM_Cxf_X * 0.001",
+                    "0 - Juice_CoM_Cxf_Y * 0.001",
+                    "0 - Juice_CoM_Cxf_Z * 0.001"
+                ]
+            }
+        },
+        {
+            "name": "LGAPX_PhaseCentre",
+            "type": "PointParameterizedConstantTranslation",
+            "config": {
+                "origin": "Juice_scFrameOrigin",
+                "axes": "Juice_AttIpf",
+                "vector": [
+                    0.0014137,
+                    -0.0001315,
+                    0.0001008
+                ]
+            }
+        },
+        {
+            "name": "LGAMX_PhaseCentre",
+            "type": "PointParameterizedConstantTranslation",
+            "config": {
+                "origin": "Juice_scFrameOrigin",
+                "axes": "Juice_AttIpf",
+                "vector": [
+                    -0.0019291,
+                    -0.0011761,
+                    0.0029144
+                ]
+            }
+        },
+        {
+            "name": "MGA_PhaseCentre",
+            "type": "PointParameterizedConstantTranslation",
+            "config": {
+                "origin": "Juice_scFrameOrigin",
+                "axes": "Juice_AttIpf",
+                "vector": [
+                    -0.00139,
+                    0.00080,
+                    0.00344
+                ]
+            }
+        },
+        {
+            "name": "HGA_PhaseCentre",
+            "type": "PointParameterizedConstantTranslation",
+            "config": {
+                "origin": "Juice_scFrameOrigin",
+                "axes": "Juice_AttIpf",
+                "vector": [
+                    -0.0017710,
+                    0.000000,
+                    -0.0003964
+                ]
+            }
+        }
+    ],
+    "bodies": [
+        {
+            "name": "Sun",
+            "point": "Sun"
+        },
+        {
+            "name": "Earth",
+            "point": "Earth",
+            "axes": "ITRF",
+            "gravity": [
+                "eigen05c"
+            ],
+            "gm": "eigen05c"
+        },
+        {
+            "name": "Moon",
+            "point": "Moon",
+            "axes": "Moon"
+        },
+        {
+            "name": "Mercury",
+            "point": "Mercury",
+            "axes": "Mercury"
+        },
+        {
+            "name": "Venus",
+            "point": "Venus",
+            "axes": "Venus"
+        },
+        {
+            "name": "Mars",
+            "point": "MarsBarycenter",
+            "gm": "MarsBarycenterGM",
+            "axes": "Mars"
+        },
+        {
+            "name": "Jupiter",
+            "point": "JupiterBarycenter",
+            "gm": "JupiterBarycenterGM",
+            "axes": "Jupiter"
+        },
+        {
+            "name": "Saturn",
+            "point": "SaturnBarycenter",
+            "gm": "SaturnBarycenterGM",
+            "axes": "Saturn"
+        },
+        {
+            "name": "Neptune",
+            "point": "NeptuneBarycenter",
+            "gm": "NeptuneBarycenterGM",
+            "axes": "Neptune"
+        },
+        {
+            "name": "Uranus",
+            "point": "UranusBarycenter",
+            "gm": "UranusBarycenterGM",
+            "axes": "Uranus"
+        },
+        {
+            "name": "Pluto",
+            "point": "PlutoBarycenter",
+            "gm": "PlutoBarycenterGM",
+            "axes": "ICRF"
+        }
+    ],
+    "gravity": [
+        {
+            "name": "SolarSystemGravity",
+            "bodies": [
+                "Sun",
+                "Mercury",
+                "Venus",
+                "Earth",
+                "Moon",
+                "Mars",
+                "Jupiter",
+                "Saturn",
+                "Neptune",
+                "Uranus",
+                "Pluto"
+            ],
+            "relativity": {
+                "sources": [
+                    "Sun",
+                    "Earth",
+                    "Moon"
+                ],
+                "massiveBodies": [
+                    "Sun",
+                    "Mercury",
+                    "Venus",
+                    "Earth",
+                    "Moon",
+                    "Mars",
+                    "Jupiter",
+                    "Saturn",
+                    "Neptune",
+                    "Uranus",
+                    "Pluto"
+                ],
+                "mode": "N-Bodies"
+            }
+        }
+    ],
+    "sphericalHarmonics": [
+        {
+            "name": "eigen05c",
+            "type": "File",
+            "config": {
+                "point": "Earth",
+                "degree": 32,
+                "order": 32,
+                "axes": "ITRF",
+                "file": "test_data/gravity/eigen05c_80_sha.tab"
+            }
+        }
+    ],
+    "dynamics": [
+        {
+            "name": "SolarSystemGravity",
+            "type": "SystemGravity",
+            "config": {
+                "model": "SolarSystemGravity",
+                "switch": true
+            }
+        },
+        {
+            "name": "Juice_SA_SRP",
+            "type": "InclinedPlateSRP",
+            "config": {
+                "occulters": [
+                    "Earth"
+                ],
+                "point": "Juice_OrbIpf",
+                "axes": "ICRF",
+                "mass": "Juice_MassCxf",
+                "area": 95.2e-6,
+                "normal": "Juice_SA_Normal_Dir",
+                "cs": 0.0,
+                "cd": 0.07,
+                "calibrationAxes": "Juice_SRPFrame",
+                "scaleWithMainComponent": true,
+                "calibration": {
+                    "x": "srpCalX",
+                    "y": "srpCalY",
+                    "z": "srpCalZ"
+                }
+            }
+        },
+        {
+            "name": "Juice_HGA_SRP",
+            "type": "InclinedPlateSRP",
+            "config": {
+                "occulters": [
+                    "Earth"
+                ],
+                "mass": "Juice_MassCxf",
+                "area": 4.523e-6,
+                "normal": "Juice_CoM_Sun_Dir",
+                "cs": 0.0,
+                "cd": 0.86,
+                "calibrationAxes": "Juice_SRPFrame",
+                "scaleWithMainComponent": true,
+                "calibration": {
+                    "x": "srpCalX",
+                    "y": "srpCalY",
+                    "z": "srpCalZ"
+                }
+            }
+        },
+        {
+            "name": "Juice_Body_SRP",
+            "type": "InclinedPlateSRP",
+            "config": {
+                "occulters": [
+                    "Earth"
+                ],
+                "mass": "Juice_MassCxf",
+                "area": 5.241e-6,
+                "normal": "Juice_CoM_Sun_Dir",
+                "cs": 0.0,
+                "cd": 0.45,
+                "calibrationAxes": "Juice_SRPFrame",
+                "scaleWithMainComponent": true,
+                "calibration": {
+                    "x": "srpCalX",
+                    "y": "srpCalY",
+                    "z": "srpCalZ"
+                }
+            }
+        },
+        {
+            "name": "SolarSystemDynamics",
+            "type": "Combined",
+            "config": [
+                "SolarSystemGravity",
+                "Juice_HGA_SRP",
+                "Juice_Body_SRP"
+            ]
+        }
+    ],
+    "lightTime": [
+        {
+            "name": "SolarSystem",
+            "bodies": [
+                "Sun",
+                "Earth",
+                "Jupiter",
+                "Saturn"
+            ]
+        },
+        {
+            "name": "EarthNoRel",
+            "refCenter": "Earth"
+        }
+    ],
+    "spacecraftParticipants": [
+        {
+            "name": "JUICE",
+            "point": "Juice_Participant",
+            "transponders": [
+                {
+                    "name": "DST1_STD",
+                    "delay": {
+                        "X_X": {
+                            "group": "7749.02 ns",
+                            "phase": "0.0 s"
+                        },
+                        "X_Ka": {
+                            "group": "7743.95 ns",
+                            "phase": "0.0 s"
+                        }
+                    }
+                },
+                {
+                    "name": "DST1_PN",
+                    "delay": {
+                        "X_X": {
+                            "group": "6828.43 ns",
+                            "phase": "4.0 us"
+                        },
+                        "X_Ka": {
+                            "group": "6817.89 ns",
+                            "phase": "0.0 s"
+                        }
+                    }
+                },
+                {
+                    "name": "DST2_STD",
+                    "delay": {
+                        "X_X": {
+                            "group": "7783.63 ns",
+                            "phase": "0.0 s"
+                        },
+                        "X_Ka": {
+                            "group": "7743.83 ns",
+                            "phase": "0.0 s"
+                        }
+                    }
+                },
+                {
+                    "name": "DST2_PN",
+                    "delay": {
+                        "X_X": {
+                            "group": "6830.53 ns",
+                            "phase": "0.0 s"
+                        },
+                        "X_Ka": {
+                            "group": "6824.96 ns",
+                            "phase": "0.0 s"
+                        }
+                    }
+                }
+            ],
+            "antennas": [
+                {
+                    "name": "LGAPX",
+                    "point": "LGAPX_PhaseCentre"
+                },
+                {
+                    "name": "LGAMX",
+                    "point": "LGAMX_PhaseCentre"
+                },
+                {
+                    "name": "MGA",
+                    "point": "HGA_PhaseCentre"
+                },
+                {
+                    "name": "HGA",
+                    "point": "HGA_PhaseCentre"
+                }
+            ]
+        }
+    ],
+    "media": {
+        "solmag": "test_data/atmos/solmag.ipf"
+    },
+    "stationParticipants": {
+        "source": "earthStations",
+        "stations": [
+            {
+                "name": "Cebreros",
+                "transmitters": [
+                    {
+                        "name": "",
+                        "bands": [
+                            {
+                                "band": "X",
+                                "rangeBias": "rangeBiasesCEB"
+                            }
+                        ]
+                    }
+                ],
+                "receivers": [
+                    {
+                        "name": "",
+                        "bands": [
+                            {
+                                "band": "X",
+                                "rangeBias": "rangeBiasesCEB"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "name": "Malargue",
+                "transmitters": [
+                    {
+                        "name": "",
+                        "bands": [
+                            {
+                                "band": "X",
+                                "rangeBias": "rangeBiasesMLG"
+                            }
+                        ]
+                    }
+                ],
+                "receivers": [
+                    {
+                        "name": "",
+                        "bands": [
+                            {
+                                "band": "X",
+                                "rangeBias": "rangeBiasesMLG"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "name": "New_Norcia",
+                "transmitters": [
+                    {
+                        "name": "",
+                        "bands": [
+                            {
+                                "band": "X",
+                                "rangeBias": "rangeBiasesNNO"
+                            }
+                        ]
+                    }
+                ],
+                "receivers": [
+                    {
+                        "name": "",
+                        "bands": [
+                            {
+                                "band": "X",
+                                "rangeBias": "rangeBiasesNNO"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "name": "New_Norcia_2"
+            }
+        ]
+    },
+    "geometry": [
+        {
+            "name": "New_Norcia_Juice_Elevation",
+            "type": "Elevation",
+            "config": {
+                "observer": "New_Norcia",
+                "target": "Juice_OrbIpf"
+            }
+        }
+    ],
+    "evaluables": [
+        {
+            "name": "massContext",
+            "type": "IpfScalarTimeEvaluable",
+            "config": {
+                "file": "test_data/orb/juice/mass.cxf",
+                "timescale": "TDB",
+                "interpOrder": 1,
+                "map": [
+                    {
+                        "index": 0,
+                        "derivOrder": 0,
+                        "name": "Juice_MassCxf"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "comContext",
+            "type": "IpfScalarTimeEvaluable",
+            "config": {
+                "file": "test_data/orb/juice/com.cxf",
+                "timescale": "TDB",
+                "interpOrder": 1,
+                "map": [
+                    {
+                        "index": 0,
+                        "derivOrder": 0,
+                        "name": "Juice_CoM_Cxf_X"
+                    },
+                    {
+                        "index": 1,
+                        "derivOrder": 0,
+                        "name": "Juice_CoM_Cxf_Y"
+                    },
+                    {
+                        "index": 2,
+                        "derivOrder": 0,
+                        "name": "Juice_CoM_Cxf_Z"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "saAngles",
+            "type": "IpfScalarTimeEvaluable",
+            "config": {
+                "file": "test_data/orb/juice/sa.cxf",
+                "timescale": "TDB",
+                "map": [
+                    {
+                        "index": 0,
+                        "derivOrder": 0,
+                        "name": "SA_PY_Angle"
+                    },
+                    {
+                        "index": 1,
+                        "derivOrder": 0,
+                        "name": "SA_MY_Angle"
+                    }
+                ]
+            }
+        }
+    ],
+    "vectorEvaluables": [
+        {
+            "name": "New_Norcia_Juice_Elevation",
+            "type": "Concatenation",
+            "config": {
+                "evaluables": [
+                    "New_Norcia_Juice_Elevation"
+                ]
+            }
+        },
+        {
+            "name": "SRP_Acceleration_SA_ICRF",
+            "type": "Dynamics",
+            "config": {
+                "model": "Juice_SA_SRP"
+            }
+        },
+        {
+            "name": "SRP_Acceleration_SA_SCF",
+            "type": "Dynamics",
+            "config": {
+                "model": "Juice_SA_SRP",
+                "axes": "Juice_AttIpf",
+                "projectionPartials": true
+            }
+        },
+        {
+            "name": "SRP_Acceleration_SA",
+            "type": "Concatenation",
+            "config": {
+                "evaluables": [
+                    "SRP_Acceleration_SA_ICRF",
+                    "SRP_Acceleration_SA_SCF"
+                ]
+            }
+        },
+        {
+            "name": "New_Norcia_Juice_CartesianRotate",
+            "type": "StateCartesian",
+            "config": {
+                "origin": "New_Norcia",
+                "target": "Juice_OrbIpf",
+                "axes": "New_Norcia",
+                "order": 3
+            }
+        },
+        {
+            "name": "New_Norcia_Juice_CartesianProject",
+            "type": "StateCartesian",
+            "config": {
+                "origin": "New_Norcia",
+                "target": "Juice_OrbIpf",
+                "axes": "ICRF",
+                "order": 3,
+                "projectionAxes": "New_Norcia",
+                "projectionPartials": true
+            }
+        },
+        {
+            "name": "New_Norcia_Juice_Cartesian",
+            "type": "Concatenation",
+            "config": {
+                "evaluables": [
+                    "New_Norcia_Juice_CartesianRotate",
+                    "New_Norcia_Juice_CartesianProject"
+                ]
+            }
+        },
+        {
+            "name": "Earth_Juice_ICRF",
+            "type": "StateCartesian",
+            "config": {
+                "origin": "Earth",
+                "target": "Juice_OrbIpf",
+                "axes": "ICRF",
+                "order": 1
+            }
+        },
+        {
+            "name": "Earth_Juice_ITRF_Keplerian",
+            "type": "StateElements",
+            "config": {
+                "origin": "Earth",
+                "target": "Juice_OrbIpf",
+                "axes": "ITRF",
+                "stateType": "Kep",
+                "propertyData": {
+                    "gm": "EarthGM"
+                }
+            }
+        },
+        {
+            "name": "Earth_Juice_ITRF_Bplane",
+            "type": "StateElements",
+            "config": {
+                "origin": "Earth",
+                "target": "Juice_OrbIpf",
+                "axes": "ITRF",
+                "stateType": "VinfBplane",
+                "propertyData": {
+                    "gm": "EarthGM"
+                }
+            }
+        },
+        {
+            "name": "Earth_Juice_ITRF_Geodetic",
+            "type": "StateElements",
+            "config": {
+                "origin": "Earth",
+                "target": "Juice_OrbIpf",
+                "axes": "ITRF",
+                "stateType": "Geod",
+                "propertyData": {
+                    "gm": "EarthGM",
+                    "equatorialRadius": "EarthRadius",
+                    "flattening": "EarthFlattening"
+                }
+            }
+        },
+        {
+            "name": "Earth_Juice_ITRF_States",
+            "type": "Concatenation",
+            "config": {
+                "evaluables": [
+                    "Earth_Juice_ITRF_Keplerian",
+                    "Earth_Juice_ITRF_Bplane",
+                    "Earth_Juice_ITRF_Geodetic"
+                ]
+            }
+        }
+    ],
+    "parameters": [
+        {
+            "name": "srpCalX",
+            "type": "ProcessNoiseSet",
+            "config": {
+                "gridFile": "test_data/orb/juice/srpCal.csv",
+                "column": 0,
+                "bias": "0.0"
+            }
+        },
+        {
+            "name": "srpCalY",
+            "type": "ProcessNoiseSet",
+            "config": {
+                "gridFile": "test_data/orb/juice/srpCal.csv",
+                "column": 1,
+                "bias": "0.0"
+            }
+        },
+        {
+            "name": "srpCalZ",
+            "type": "ProcessNoiseSet",
+            "config": {
+                "gridFile": "test_data/orb/juice/srpCal.csv",
+                "column": 2,
+                "bias": "0.0"
+            }
+        },
+        {
+            "name": "rangeBiasesCEB",
+            "type": "ProcessNoiseSet",
+            "config": {
+                "gridFile": "test_data/orb/juice/rangeBiasesCEB.csv",
+                "column": 0,
+                "bias": "0.0 m"
+            }
+        },
+        {
+            "name": "rangeBiasesMLG",
+            "type": "ProcessNoiseSet",
+            "config": {
+                "gridFile": "test_data/orb/juice/rangeBiasesMLG.csv",
+                "column": 0,
+                "bias": "0.0 m"
+            }
+        },
+        {
+            "name": "rangeBiasesNNO",
+            "type": "ProcessNoiseSet",
+            "config": {
+                "gridFile": "test_data/orb/juice/rangeBiasesNNO.csv",
+                "column": 0,
+                "bias": "0.0 m"
+            }
+        }
+    ]
+}

@@ -1,0 +1,225 @@
+version: '3.0'
+
+#! spacetime
+spacetime:
+  system: BCRS
+#! spacetime
+
+#! ephemeris
+ephemeris:
+  # Named ephemeris objects with files to load
+  - name: de405
+    files:
+      - share/test/unxp2000.405
+    cache: false # Do not load file to memory
+  # Another ephemeris for constants, default is loading file contents to memory
+  - name: gm431
+    files:
+      - share/test/gm_de431.tpc
+#! ephemeris
+
+#! constants
+constants:
+  # Load constants from ephemeris
+  ephemeris:
+    - source: gm431
+#! constants
+
+#! stations
+stations:
+  # Create station database for Earth ground stations
+  - name: earthStations
+    file: share/test/GroundStationsDatabase.json
+
+#! frames
+frames:
+  - name: ephem1
+    type: Ephem
+    config:
+      source: de405
+
+  - name: ITRF
+    type: AxesOrient
+    config:
+      model: IERS2000
+      nutation: share/test/nutation2000A.ipf
+      erp: ''
+
+  - name: Liftoff
+    type: AxesFrozen
+    config:
+      reference: ITRF
+      epoch: 2022-06-01T12:00:00.000 UTC
+
+  - name: SEL2
+    type: PointLagrange
+    config:
+      primary: Sun
+      secondary: Earth
+      type: L2
+
+  - name: EMC
+    type: AxesOrient
+    config:
+      model: EMCJ2000
+
+  - name: Rotating
+    type: AxesLocalOrbital
+    config:
+      center: Earth
+      target: SEL2
+      axes: RAC
+
+  - name: stations1
+    type: Stations
+    config:
+      source: earthStations
+      points: false
+
+  - name: stations2
+    type: Stations
+    config:
+      source: earthStations
+
+  - name: Solo
+    type: PointIpf
+    config:
+      file: share/test/sol.orb
+      interpOrder: 16
+      mapping: OratosLegacy
+
+  - name: Mercury
+    type: PointAlias
+    config:
+      target: MercuryBarycenter
+
+  - name: Venus
+    type: PointAlias
+    config:
+      target: VenusBarycenter
+
+  - name: SC
+    type: PointOrbit
+    config:
+      center: Earth   # Center of orbit
+      axes: ICRF      # Orbital axes (X-Y plane)
+      epoch: 2014-05-23T00:00:00 TDB   # reference epoch
+      sma: 40000.0 km   # Semi-major axes
+      ecc: 0.01         # Eccentricity
+      inc: 3.407 deg    # Inclination
+      ran: 73.23959 deg # RAAN
+      aop: 319.2485 deg # Argument of pericentre
+      tan: 3.360110 deg # True anomaly at reference epoch
+      gm: EarthGM   # GM of central body
+
+  - name: SC_LOF
+    type: AxesLocalOrbital
+    config:
+      center: Earth
+      target: SC
+      axes: CRA
+#! frames
+
+#! geometry
+geometry:
+  - name: NNO_Solo_Elevation
+    type: Elevation
+    config:
+      observer: New_Norcia
+      target: Solo
+
+  - name: CEB_Solo_Elevation
+    type: Elevation
+    config:
+      observer: Cebreros
+      target: Solo
+
+  - name: NNO_Solo_Elevation_MaskUplink
+    type: Elevation
+    config:
+      observer: New_Norcia
+      target: Solo
+      mask: MaskUplink
+      stations: earthStations
+
+  - name: SESC_Angle
+    type: ThreePointAngle
+    config:
+      point1: Sun
+      point2: Solo
+      point3: Earth
+
+  - name: Solo_Earth_Range
+    type: Range
+    config:
+      observer: Earth
+      target: Solo
+
+  - name: Solo_Venus_Range
+    type: Range
+    config:
+      observer: VenusBarycenter
+      target: Solo
+  
+  - name: Earth_Solo_Declination
+    type: Declination
+    config:
+      observer: Earth
+      target: Solo
+
+  - name: SC_Mars_Earth_Occultation_Geometric
+    type: Occultation
+    config:
+      observer: SC
+      target: MarsBarycenter
+      occulter: Earth
+      occulterRadius: 6378.1366 km
+      solveLightTime: false
+
+  - name: SC_Mars_Moon_Occultation_Geometric
+    type: Occultation
+    config:
+      observer: SC
+      target: MarsBarycenter
+      occulter: Moon
+      occulterRadius: 1737.400 km
+      solveLightTime: false
+
+#! geometry
+bodies:
+  - name: Earth
+    point: Earth
+  - name: Sun
+    point: Sun
+  - name: Moon
+    point: Moon
+
+gravity:
+  - name: solarSystem
+    bodies:
+      - Earth
+      - Moon
+      - Sun
+
+dynamics:
+  - name: solarSystemGravity
+    type: SystemGravity
+    config:
+      model: solarSystem
+
+  - name: solarSystem
+    type: Combined
+    config:
+      - solarSystemGravity
+
+spacecraft:
+  - name: GeoSat
+    mass: 1200 kg
+    srp:
+      area: 10 m^2
+      cr: 1.7
+    thrusters:
+      - name: main
+        thrust: 100 N
+        isp: 320 s
+
