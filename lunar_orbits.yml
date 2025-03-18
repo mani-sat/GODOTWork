@@ -76,7 +76,7 @@ frames:
       epoch: 2026-05-01T00:00:00 TDB   # reference epoch
       sma: 1787.4 km   # Semi-major axes
       ecc: 0.00         # Eccentricity
-      inc: 76 deg    # Inclination
+      inc: 86 deg    # Inclination
       ran: 0 deg #73.23959 deg # RAAN
       aop: 0 deg #319.2485 deg # Argument of pericentre
       tan: 0 deg #3.360110 deg # True anomaly at reference epoch
