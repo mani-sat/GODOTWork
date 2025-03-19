@@ -123,13 +123,6 @@ geometry:
       observer: MG11
       target: SC
 
-  - name: Malargue_Moon_vec
-    type: Vector3
-    config:
-      observer: MG11
-      target: SC
-
-
 
 #! geometry
 bodies:
