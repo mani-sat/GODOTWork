@@ -10,6 +10,7 @@ class SEEnum(enum.IntFlag):
     CLEAR_MOON_NN = enum.auto()
     CLEAR_MOON_CB = enum.auto()
     CLEAR_MOON_MG = enum.auto()
+    LOS_GW = enum.auto()
 
 class StateEvaluator:
     def __init__(self, df: pd.DataFrame):
