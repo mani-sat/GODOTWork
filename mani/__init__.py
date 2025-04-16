@@ -1,1 +1,0 @@
-from .GodotEvaluator import GodotHandler
