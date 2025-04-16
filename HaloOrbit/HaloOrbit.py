@@ -1,6 +1,3 @@
-from HaloOrbit.utils_luke import to_standard_units, formatter, rodrigues
-import os
-
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial.transform import Rotation as R
@@ -151,7 +148,6 @@ def Create_halo_point(moonData, epoch0):
 
 if __name__=="__main__":
     from utils_luke import to_standard_units, formatter, rodrigues
-    from VisibilityModel import get_len
     import time
     t1 = time.perf_counter()
     # os.chdir("../")
