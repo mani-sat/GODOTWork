@@ -1,8 +1,8 @@
 from numba import njit
 import numpy as np
-from utils import is_closer, resize_vector_to_radius, compute_projection_matrix, project_point
+from .utils import is_closer, resize_vector_to_radius, compute_projection_matrix, project_point
 
-class VisibilityModel():
+class VisibilityModel:
     def __init__(self, moon_radius:float=1737.4, earth_radius:float=6371):
         self.moon_radius:float = moon_radius
         self.earth_radius:float = earth_radius

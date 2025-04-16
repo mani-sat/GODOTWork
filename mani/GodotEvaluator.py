@@ -1,9 +1,9 @@
 import numpy as np
 from multiprocessing import Pool
-from VisibilityModel import VisibilityModel
-from StateEvaluator import SEEnum, StateEvaluator
-from utils import EventGrid, get_len
-from HaloOrbit.HaloOrbit import HaloOrbit
+from .VisibilityModel import VisibilityModel
+from .StateEvaluator import SEEnum, StateEvaluator
+from .utils import EventGrid, get_len
+from .HaloOrbit.HaloOrbit import HaloOrbit
 import pandas as pd
 from numba import njit
 
@@ -14,7 +14,7 @@ from godot import cosmos, core
 
 from godot.core import tempo
 
-class GodotHandler():
+class GodotHandler:
     def __init__(self,t1, t2, res, universe_file):
         self.event_grid = EventGrid(t1, t2, res)
         self.universe_file = universe_file

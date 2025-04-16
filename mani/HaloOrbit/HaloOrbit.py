@@ -1,4 +1,4 @@
-from HaloOrbit.utils_luke import to_standard_units
+from .utils_luke import to_standard_units
 
 import numpy as np
 from godot import cosmos
