@@ -1,11 +1,11 @@
 from numba import njit
 import numpy as np
+from utils import is_closer, resize_vector_to_radius, compute_projection_matrix, project_point
 
 class VisibilityModel():
     def __init__(self, moon_radius:float=1737.4, earth_radius:float=6371):
         self.moon_radius:float = moon_radius
         self.earth_radius:float = earth_radius
-
         
     def los_from_gs_to_sc(self, spacecraft, groundstation) -> bool:
         """
@@ -55,14 +55,14 @@ class VisibilityModel():
         """
         sun_earth = moon_sun - moon_earth
         sun_sc = moon_sun - moon_sc
-        if self.is_closer(sun_earth, sun_sc):
+        if is_closer(sun_earth, sun_sc):
             if self.calculate_within(moon_sun, 
                                      moon_sc, 
                                      moon_earth, 
                                      self.earth_radius):
                 return False
 
-        if self.is_closer(moon_sun, sun_sc):
+        if is_closer(moon_sun, sun_sc):
             moon_centre = np.array([0, 0, 0], dtype=np.float64)
             if self.calculate_within(moon_sun,
                                           moon_sc, 
@@ -72,12 +72,12 @@ class VisibilityModel():
         return True
     
     def sun_light_on_moon(self, moon_sun, moon_earth, moon_sc) -> bool:
-        moon_point = self.resize_vector_to_radius(moon_sc, self.moon_radius)
+        moon_point = resize_vector_to_radius(moon_sc, self.moon_radius)
 
         sun_earth = moon_sun - moon_earth
         sun_point = moon_sun - moon_point
 
-        if self.is_closer(sun_earth, sun_point):
+        if is_closer(sun_earth, sun_point):
             if self.calculate_within(moon_sun,
                                      moon_point, 
                                      moon_earth,
@@ -109,56 +109,11 @@ class VisibilityModel():
             True if the projected point is within the projected sphere,
             False otherwise.
         """
-        P = self.compute_projection_matrix(basis)
-        point_projected = self.project_point(P, point)
-        centre_projected = self.project_point(P, sphere_centre)
+        P = compute_projection_matrix(basis)
+        point_projected = project_point(P, point)
+        centre_projected = project_point(P, sphere_centre)
         pws = self.point_within_sphere(point_projected, centre_projected, radius)
         return pws
-
-
-    @staticmethod
-    @njit
-    def is_closer(vector1:float, vector2:float) -> bool:
-        """Checks if `vector1` is shorter than `vector2`."""
-        return get_len(vector1) < get_len(vector2)
-
-    @staticmethod
-    @njit
-    def compute_projection_matrix(basis):
-        """
-        Computes the 3x3 projection matrix that projects a 3D
-        point onto a plane with the given normal vector.
-
-        Parameters
-        ----------
-        basis : (np.ndarray)
-            An 3-element vector giving the basis for the projection.
-
-        Returns
-        -------
-        (np.ndarray)
-            The 3 x 3 projection matrix for the normal-plane
-            of the basis.
-        """
-        if basis.shape != (3,):
-            raise ValueError("The basis vector must be a 3-element vector.")
-        basis_len = get_len(basis)
-        if basis_len == 0:
-            raise ValueError("The basis vector cannot be a zero vector.")
-        normal = basis / basis_len  # Normalize the normal vector
-        return get_eye() - calc_outer(normal) # Projection matrix
-    
-    @staticmethod
-    @njit
-    def project_point(P, point):
-        projected_point = P @ point  # Apply projection
-        return projected_point
-    
-    @staticmethod
-    @njit
-    def resize_vector_to_radius(vector, radius):
-        scale = radius / get_len(vector)
-        return vector * scale
 
     @staticmethod
     @njit
@@ -183,9 +138,10 @@ class VisibilityModel():
         length_sq = (distance[0] * distance[0] + distance[1] * distance[1] + distance[2] * distance[2])
         radius_sq = radius * radius
         return length_sq < radius_sq
-    
+
     @staticmethod
-    def calcElevation(vec) -> np.float16:
+    @njit
+    def get_elevation(vec) -> np.float16:
         """ Calculates the elevation of the spacecraft, as seen from a GS
 
         Parameters
@@ -207,22 +163,5 @@ class VisibilityModel():
         elev = np.arctan2(vec[2], rxy)
         return elev
     
-
-@njit
-def get_eye():
-    return np.array([[1,0,0],[0,1,0],[0,0,1]],dtype=np.float64)
-
-@njit
-def get_len(basis):
-    return np.sqrt(basis[0] * basis[0] + basis[1] * basis[1] + basis[2] * basis[2])
-
-
-@njit
-def calc_outer(v):
-    return np.array([[v[0]*v[0], v[0] * v[1], v[0] * v[2]],
-                     [v[1]*v[0], v[1] * v[1], v[1] * v[2]],
-                     [v[2]*v[0], v[2] * v[1], v[2] * v[2]]])
-    
 if __name__ == "__main__":
     NN_moon_block = VisibilityModel()
-

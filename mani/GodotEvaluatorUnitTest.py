@@ -1,8 +1,7 @@
 import unittest
-import numpy as np
 from godot.core.tempo import Epoch
 from GodotEvaluator import GodotHandler
-from StateEvaluator import StateEvaluator, SEEnum
+from mani.StateEvaluator import StateEvaluator, SEEnum
 
 class TestStateMachine(unittest.TestCase):
     def __init__(self, methodName = "runTest"):
@@ -13,7 +12,6 @@ class TestStateMachine(unittest.TestCase):
         results = godotHandler._evaluate_timestamps([t])
         res = godotHandler._move_to_StateEvaluator(results, t)
         return res
-
 
     def testLOS(self):
         t = Epoch('2026-04-02T01:00:00 TDB')
@@ -62,19 +60,6 @@ class TestStateMachine(unittest.TestCase):
         self.assertTrue(res.above_elev('NN11',10.0).item())
         conds = res.above_elev('NN11',10.0) & res.has(flags)
         self.assertTrue(conds.item())
-
-
-    def testMultipleStaions(self):
-        t = Epoch('2026-04-02T17:20:00 TDB')
-        res = self.getSEfromGodot(t)
-        flags = [SEEnum.CLEAR_MOON_CB, SEEnum.CLEAR_MOON_MG, SEEnum.CLEAR_MOON_NN]
-        self.assertTrue(res.has(flags).item())
-        self.assertFalse(res.above_elev('CB11',10.0).item())
-        self.assertFalse(res.above_elev('MG11',10.0).item())
-        self.assertTrue(res.above_elev('NN11',10.0).item())
-        conds = res.above_elev('NN11',10.0) & res.has(flags)
-        self.assertTrue(conds.item())
-
 
     def testLogic(self):
         t = Epoch('2026-04-02T17:20:00 TDB')

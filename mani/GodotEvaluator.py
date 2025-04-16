@@ -1,8 +1,8 @@
 import numpy as np
 from multiprocessing import Pool
-from VisibilityModel import VisibilityModel, get_len
+from VisibilityModel import VisibilityModel
 from StateEvaluator import SEEnum, StateEvaluator
-from utils import EventGrid
+from utils import EventGrid, get_len
 from HaloOrbit.HaloOrbit import HaloOrbit
 import pandas as pd
 from numba import njit
@@ -40,7 +40,7 @@ class GodotHandler():
         return results_df
     
     def initialize_halo_orbit(self, event_grid, n_points):
-        self.Halo.load_Halo_Data("./HaloOrbit/GateWayOrbit_prop.csv")
+        self.Halo.load_Halo_Data("./mani/HaloOrbit/GateWayOrbit_prop.csv")
 
         uni = self.fetch_universe()
         delta = len(event_grid) // n_points
@@ -120,11 +120,11 @@ class GodotHandler():
                 gs_sc = uni.frames.vector3(station,'SC',station,t)
                 lfgts = vismod.los_from_gs_to_sc(sc, GS)
                 state = self.update_bit(state, stations[station], lfgts)
-                elev = vismod.calcElevation(gs_sc)
+                elev = vismod.get_elevation(gs_sc)
                 elev_deg = np.degrees(elev,dtype=np.float16)
                 eval_entry[f'elv_{station}'] =  elev_deg
             #Update and append
-            eval_entry[f'state'] = state
+            eval_entry['state'] = state
             my_eval.append(eval_entry)
         return my_eval
     

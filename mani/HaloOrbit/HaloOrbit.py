@@ -1,13 +1,7 @@
-from HaloOrbit.utils_luke import to_standard_units, formatter, rodrigues
-import os
+from HaloOrbit.utils_luke import to_standard_units
 
 import numpy as np
-import matplotlib.pyplot as plt
-from scipy.spatial.transform import Rotation as R
-from godot.core import tempo, astro, events
-from godot.core.autodif import bridge as br
 from godot import cosmos
-from godot.model import eventgen, common, prop
 import godot.core.util as util
 from sklearn.decomposition import PCA
 util.suppressLogger()
@@ -83,7 +77,6 @@ class HaloOrbit:
         init_axis/=np.linalg.norm(init_axis)
         init_angle=np.dot(self.x_moon, init_moonPoint)/(np.linalg.norm(init_moonPoint)*np.linalg.norm(self.x_moon))
         init_angle=-np.arccos(init_angle)
-        moon_len=np.linalg.norm(init_moonPoint)
 
         new_HaloData=np.zeros((len(self.HaloData), 3))
         Rot_mat=self.rotation_matrix(init_axis, init_angle)
@@ -150,9 +143,10 @@ def Create_halo_point(moonData, epoch0):
 
 
 if __name__=="__main__":
-    from utils_luke import to_standard_units, formatter, rodrigues
-    from VisibilityModel import get_len
+    from utils_luke import to_standard_units
+    from godot.core import tempo
     import time
+
     t1 = time.perf_counter()
     # os.chdir("../")
     uni_config=cosmos.util.load_yaml("./universe2.yml")
