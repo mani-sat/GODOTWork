@@ -1,0 +1,185 @@
+version: '3.0'
+
+#! spacetime
+spacetime:
+  system: BCRS
+#! spacetime
+
+#! ephemeris
+ephemeris:
+  # Named ephemeris objects with files to load
+  - name: de405
+    files:
+      - share/test/unxp2000.405
+    cache: false # Do not load file to memory
+  
+  - name: de432
+    files:
+      - share/test/de432.jpl
+    
+  # Another ephemeris for constants, default is loading file contents to memory
+  - name: gm431
+    files:
+      - share/test/gm_de431.tpc
+#! ephemeris
+
+#! constants
+constants:
+  # Load constants from ephemeris
+  ephemeris:
+    - source: gm431
+#! constants
+
+#! stations
+stations:
+  # Create station database for Earth ground stations
+  - name: earthStations
+    file: share/test/GroundStationsDatabase.json
+
+#! frames
+frames:
+  - name: ephem1
+    type: Ephem
+    config:
+      source: de405
+
+  - name: ITRF
+    type: AxesOrient
+    config:
+      model: IERS2000
+      nutation: share/test/nutation2000A.ipf      
+      erp: ''
+
+  - name: MoonIAU2009
+    type: AxesOrient
+    config:
+      model: MoonIAU2009    # Use the IAU2009 model for the Moon's orientation
+      nutation: share/test/nutation2000A.ipf   # Nutation model (optional)
+      erp: ''               # Earth Rotation Parameters (optional)
+
+  - name: stations1
+    type: Stations
+    config:
+      source: earthStations
+      points: false
+
+  - name: stations2
+    type: Stations
+    config:
+      source: earthStations
+
+  - name: SC #LRO orbit
+    type: PointOrbit
+    config:
+      center: Moon   # Center of orbit
+      axes: MoonIAU2009      # Orbital axes (X-Y plane)
+      epoch: 2026-05-01T00:00:00 TDB   # reference epoch
+      sma: 1787.4 km   # Semi-major axes
+      ecc: 0.00         # Eccentricity
+      inc: 86 deg    # Inclination
+      ran: 0 deg #73.23959 deg # RAAN
+      aop: 0 deg #319.2485 deg # Argument of pericentre
+      tan: 0 deg #3.360110 deg # True anomaly at reference epoch
+      gm: MoonGM   # GM of central body      
+
+  - name: SC_LOF
+    type: AxesLocalOrbital
+    config:
+      center: Moon
+      target: SC
+      axes: CRA
+
+  - name: MoonBase #LRO orbit
+    type: PointOrbit
+    config:
+      center: Moon   # Center of orbit
+      axes: MoonAxes      # Orbital axes (X-Y plane)
+      epoch: 2026-05-01T00:00:00 TDB   # reference epoch
+      sma: 1737.1 km   # Semi-major axes
+      ecc: 0.00         # Eccentricity
+      inc: 0 deg    # Inclination
+      ran: 0 deg #73.23959 deg # RAAN
+      aop: 0 deg #319.2485 deg # Argument of pericentre
+      tan: 0 deg #3.360110 deg # True anomaly at reference epoch
+      gm: MoonGM   # GM of central body
+      
+#! frames
+
+#! geometry
+geometry:
+  - name: SC_NN_Earth_Occultation_Geometric
+    type: Occultation
+    config:
+      observer: CB11
+      target: SC
+      occulter: Earth
+      occulterRadius: 6378.1366 km
+      solveLightTime: false
+
+  - name: SC_NN_Moon_Occultation_Geometric
+    type: Occultation
+    config:
+      observer: CB11
+      target: SC
+      occulter: Moon
+      occulterRadius: 1737.400 km
+      solveLightTime: false
+
+  - name: New_Norcia_Moon_Elevation
+    type: Elevation
+    config:
+      observer: NN11
+      target: SC
+
+  - name: Cebreros_Moon_Elevation
+    type: Elevation
+    config:
+      observer: CB11
+      target: SC
+
+  - name: Malargue_Moon_Elevation
+    type: Elevation
+    config:
+      observer: MG11
+      target: SC
+
+
+
+#! geometry
+bodies:
+  - name: Earth
+    point: Earth
+  - name: Sun
+    point: Sun
+  - name: Moon
+    point: Moon
+    axes: MoonIAU2009
+
+gravity:
+  - name: solarSystem
+    bodies:
+      - Earth
+      - Moon
+      - Sun
+
+dynamics:
+  - name: solarSystemGravity
+    type: SystemGravity
+    config:
+      model: solarSystem
+
+  - name: solarSystem
+    type: Combined
+    config:
+      - solarSystemGravity
+
+spacecraft:
+  - name: GeoSat
+    mass: 1200 kg
+    srp:
+      area: 10 m^2
+      cr: 1.7
+    thrusters:
+      - name: main
+        thrust: 100 N
+        isp: 320 s
