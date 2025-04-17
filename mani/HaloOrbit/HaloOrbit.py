@@ -1,4 +1,4 @@
-from .utils_luke import to_standard_units
+from utils_luke import to_standard_units
 
 import numpy as np
 from godot import cosmos
@@ -106,7 +106,20 @@ class HaloOrbit:
         """
         find the angle between the initial moon position and the current moon position
         """
-        angle = -np.arccos(np.dot(init_moonPoint, moonPos)/(np.linalg.norm(init_moonPoint)*np.linalg.norm(moonPos)))
+        n1 = init_moonPoint / np.linalg.norm(init_moonPoint)
+        n2 = moonPos / np.linalg.norm(moonPos)
+        d = np.dot(n1, n2)
+        d = np.clip(d, a_min=-1.0, a_max=1.0)
+        try:
+            angle = -np.arccos(d)
+            assert np.abs(d) <= 1.0
+        except:
+            print("Error")
+            print(d)
+            print(init_moonPoint.dtype)
+            print(moonPos.dtype)
+            print(init_moonPoint)
+            print(moonPos)
         sign = np.sign(np.dot(np.cross(init_moonPoint, moonPos), rot_axis))
         return sign*angle
 
@@ -132,12 +145,13 @@ class HaloOrbit:
     
 def Create_halo_point(moonData, epoch0):
     Halo_orbit = HaloOrbit(epoch0)
-    Halo_orbit.load_Halo_Data("HaloOrbit/GateWayOrbit_prop.csv")
+    Halo_orbit.load_Halo_Data("./GateWayOrbit_prop.csv")
     Halo_orbit.translate_to_orbit_plane(moonData)
     for i, ep in enumerate(grid):
+        print(i)
         point=moonData[i]
         pos=Halo_orbit.get_HaloGW_pos(ep, point)
-        print(pos)
+        #print(pos)
 
 
 
@@ -152,8 +166,11 @@ if __name__=="__main__":
     uni_config=cosmos.util.load_yaml("./universe2.yml")
     uni = cosmos.Universe(uni_config)
 
-    ep1 = tempo.Epoch('2026-01-01T00:00:00 TT')
-    ep2 = tempo.Epoch('2026-02-01T00:00:00 TT')
+    # ep1 = tempo.Epoch('2026-01-01T00:00:00 TT')
+    # ep2 = tempo.Epoch('2026-02-01T00:00:00 TT')
+
+    ep1 = tempo.Epoch('2026-06-02T00:00:00 TDB')
+    ep2 = tempo.Epoch('2026-06-02T02:00:00 TDB')
     ran = tempo.EpochRange( ep1, ep2 )
     timestep = 1.0
     grid = ran.createGrid(timestep) # 60 seconds stepsize

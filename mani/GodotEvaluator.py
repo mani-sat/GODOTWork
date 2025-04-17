@@ -1,22 +1,23 @@
-import numpy as np
 from multiprocessing import Pool
+import numpy as np
+import pandas as pd
+from numba import njit
+
+from tqdm import tqdm
+from godot import cosmos, core
+from godot.core import tempo
+import godot.core.util as util
+
 from .VisibilityModel import VisibilityModel
 from .StateEvaluator import SEEnum, StateEvaluator
 from .utils import EventGrid, get_len
 from .HaloOrbit.HaloOrbit import HaloOrbit
-import pandas as pd
-from numba import njit
 
-import godot.core.util as util
 util.suppressLogger()
-from tqdm import tqdm
-from godot import cosmos, core
-
-from godot.core import tempo
 
 class GodotHandler:
-    def __init__(self,t1, t2, res, universe_file):
-        self.event_grid = EventGrid(t1, t2, res)
+    def __init__(self, start_time, end_time, resolution, universe_file):
+        self.event_grid = EventGrid(start_time, end_time, resolution)
         self.universe_file = universe_file
         self.uni_config = cosmos.util.load_yaml(universe_file)
         self.Halo = HaloOrbit(self.event_grid.t1)
@@ -36,7 +37,7 @@ class GodotHandler:
         print("Evaluating chunks")
         eval = self._evaluate_chuncks_multiprocessed(params)
         print("Moving chunks to StateEvaluator")
-        results_df = self._move_to_StateEvaluator(eval, event_grid)
+        results_df = self._move_to_state_evaluator(eval, event_grid)
         return results_df
     
     def initialize_halo_orbit(self, event_grid, n_points):
@@ -45,20 +46,37 @@ class GodotHandler:
         uni = self.fetch_universe()
         delta = len(event_grid) // n_points
         eval_points = [event_grid[idx*delta] for idx in range(n_points)]
-        moonData=np.asarray([uni.frames.vector3('Earth', 'Moon', 'ICRF', ep) for ep in eval_points])
+        moon_data = [uni.frames.vector3('Earth', 'Moon', 'ICRF', ep) for ep in eval_points]
+        moon_data=np.asarray(moon_data)
 
-        self.Halo.translate_to_orbit_plane(moonData)
+        self.Halo.translate_to_orbit_plane(moon_data)
 
     def _evaluate_chuncks_multiprocessed(self, params) -> list[dict]:
         with Pool() as pool:
-            results = pool.map(self._evaluate_timestamps, params)
+            pool_results = pool.map(self._evaluate_timestamps, params)
             pool.close()
             pool.join()
         
-        eval = []
-        for val in tqdm(results):
-            eval.extend(val)
-        return eval
+        dists_list = []
+        states_list = []
+        elevations_list = []
+        for dist, elev, state in tqdm(pool_results):
+            dists_list.append(dist)
+            elevations_list.append(elev)
+            states_list.append(state)
+
+
+        dists_all = np.concatenate(dists_list)
+        states_all = np.concatenate(states_list)
+        elevs_all = np.concatenate(elevations_list)
+        df = pd.DataFrame({
+            'gw_dist': dists_all,
+            'NN11': elevs_all[:, 0],
+            'CB11': elevs_all[:, 1],
+            'MG11': elevs_all[:, 2],
+            'state': states_all
+        })
+        return df
     
     def create_chunks(self, chksize, event_grid) -> list[tempo.Epoch]:
         params = []
@@ -73,8 +91,13 @@ class GodotHandler:
     
     def _evaluate_timestamps(self, args):
         t_list = args
-        uni = self.fetch_universe()
         vismod = VisibilityModel()
+        uni = self.fetch_universe()
+
+        list_length = len(t_list)
+        dists = np.empty(list_length, dtype=np.uint32)
+        states = np.empty(list_length, dtype=np.uint8)
+        elevations = np.empty((list_length,3), dtype=np.float16)
 
         stations = {
             'NN11' : SEEnum.CLEAR_MOON_NN,
@@ -82,13 +105,9 @@ class GodotHandler:
             'MG11' : SEEnum.CLEAR_MOON_MG
             }
         
-        my_eval = []
-
-        for t in t_list:
+        for index1, t in enumerate(t_list):
             #Setup a 8 bit holder for flags
             state:np.uint8= 0
-            eval_entry = {}
-
             # Common vectors for all stations
             sun = uni.frames.vector3('Moon', 'Sun', 'ICRF', t)
             earth = uni.frames.vector3('Moon','Earth', 'ICRF', t)
@@ -97,13 +116,12 @@ class GodotHandler:
 
             # Create spacecraft
             gw_pos_earth_centred = self.Halo.get_HaloGW_pos(t, moon)
-
-            # # TODO: Right calcs?
-            gw_pos = gw_pos_earth_centred - earth
-            delta_gw_sc = gw_pos - sc
-            gw_dist = get_len(delta_gw_sc)
-            eval_entry['gateway_dist'] = gw_dist
-
+            # TODO: - moon? Idk, er det den rigtige transformation?
+            # måske i virkeligheden + earth? TODO: Unit test!
+            gw_pos = gw_pos_earth_centred + earth
+            # if len(gw_pos) == 0:
+                #print(gw_pos)
+            dists[index1] = np.linalg.norm(gw_pos - sc)
             gw_los = vismod.los_from_gs_to_sc(gw_pos, sc)
             state = self.update_bit(state, SEEnum.LOS_GW, gw_los)
 
@@ -114,60 +132,25 @@ class GodotHandler:
             state = self.update_bit(state, SEEnum.SUN_ON_MOON, slom)
 
             # Run through each station, and get evaluations
-            for station in stations.keys():
+            for index2, (station, enum) in enumerate(stations.items()):
                 # Get vector that are dependent on station
-                GS = uni.frames.vector3('Moon',station, 'ICRF', t)
+                ground_station = uni.frames.vector3('Moon',station, 'ICRF', t)
                 gs_sc = uni.frames.vector3(station,'SC',station,t)
-                lfgts = vismod.los_from_gs_to_sc(sc, GS)
-                state = self.update_bit(state, stations[station], lfgts)
+                lfgts = vismod.los_from_gs_to_sc(sc, ground_station)
+                state = self.update_bit(state, enum, lfgts)
                 elev = vismod.get_elevation(gs_sc)
                 elev_deg = np.degrees(elev,dtype=np.float16)
-                eval_entry[f'elv_{station}'] =  elev_deg
+                elevations[index1, index2] = elev_deg
             #Update and append
-            eval_entry['state'] = state
-            my_eval.append(eval_entry)
-        return my_eval
+            states[index1] = state
+        return (dists, elevations, states)
     
     @staticmethod
-    def _move_to_StateEvaluator(eval: list[dict], event_grid) -> StateEvaluator:
-        result_df = pd.DataFrame(eval)
+    def _move_to_state_evaluator(result_df: pd.DataFrame, event_grid) -> StateEvaluator:
         result_df.insert(0,"time",event_grid)
         result_df = StateEvaluator(result_df)
         return result_df
     
-    @staticmethod
-    @njit
-    def get_view_times_span(self, conditions) -> np.ndarray:
-        times = self.get_event_grid()
-        view_time_span = []
-        visible = False
-        start_time:str
-
-        length = len(times)
-        for i in range(length):
-            if not visible and conditions[i]:
-                t = times[i]
-                start_time = t
-                visible = True
-            if visible and not conditions[i]:
-                t = times[i]
-                visible = False
-                view_time_span.append((start_time, t))
-        view_time_span = np.array(view_time_span)
-
-        return view_time_span
-    
-    @staticmethod
-    @njit
-    def get_view_time_lengths(view_time_span) -> np.ndarray:
-        arr = []
-        for interval in view_time_span:
-            start = interval[0]
-            end = interval[1]
-            arr.append(end-start)
-
-        return np.array(arr)
-
     @staticmethod
     @njit
     def update_bit(state, setting: SEEnum, status:bool):
@@ -194,11 +177,12 @@ class GodotHandler:
             return state & ~setting
 
 if __name__ == "__main__":
+    import sys
     universe_file = './universe2.yml'
     import time
     t1 = time.perf_counter()
     ep1 = core.tempo.Epoch('2026-06-02T00:00:00 TDB')
-    ep2 = core.tempo.Epoch('2026-07-02T00:00:00 TDB')
+    ep2 = core.tempo.Epoch('2026-06-02T02:00:00 TDB')
     godotHandler = GodotHandler(ep1, ep2, 1.0, universe_file)
 
     res = godotHandler.calculate_visibility(200)

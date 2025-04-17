@@ -32,7 +32,7 @@ class StateEvaluator:
             A series of elevation values for all timestamps
         
         """
-        return self.df[f'elv_{station}']
+        return self.df[station]
     
     def above_elev(self, station:str, min_elevation:np.float16) -> pd.Series:
         """

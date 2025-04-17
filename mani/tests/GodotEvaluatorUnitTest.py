@@ -1,7 +1,7 @@
 import unittest
 from godot.core.tempo import Epoch
-from GodotEvaluator import GodotHandler
-from mani.StateEvaluator import StateEvaluator, SEEnum
+from mani import GodotHandler
+from StateEvaluator import StateEvaluator, SEEnum
 
 class TestStateMachine(unittest.TestCase):
     def __init__(self, methodName = "runTest"):
