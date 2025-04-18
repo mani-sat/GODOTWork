@@ -10,7 +10,7 @@ import godot.core.util as util
 
 from .VisibilityModel import VisibilityModel
 from .StateEvaluator import SEEnum, StateEvaluator
-from .utils import EventGrid, get_len
+from .utils import EventGrid
 from .HaloOrbit.HaloOrbit import HaloOrbit
 
 util.suppressLogger()
@@ -111,16 +111,9 @@ class GodotHandler:
             # Common vectors for all stations
             sun = uni.frames.vector3('Moon', 'Sun', 'ICRF', t)
             earth = uni.frames.vector3('Moon','Earth', 'ICRF', t)
-            moon = - earth
             sc = uni.frames.vector3('Moon','SC', 'ICRF', t)
 
-            # Create spacecraft
-            gw_pos_earth_centred = self.Halo.get_HaloGW_pos(t, moon)
-            # TODO: - moon? Idk, er det den rigtige transformation?
-            # måske i virkeligheden + earth? TODO: Unit test!
-            gw_pos = gw_pos_earth_centred + earth
-            # if len(gw_pos) == 0:
-                #print(gw_pos)
+            gw_pos = self._get_mooncentric_GW_pos(earth, t)
             dists[index1] = np.linalg.norm(gw_pos - sc)
             gw_los = vismod.los_from_gs_to_sc(gw_pos, sc)
             state = self.update_bit(state, SEEnum.LOS_GW, gw_los)
@@ -139,11 +132,18 @@ class GodotHandler:
                 lfgts = vismod.los_from_gs_to_sc(sc, ground_station)
                 state = self.update_bit(state, enum, lfgts)
                 elev = vismod.get_elevation(gs_sc)
-                elev_deg = np.degrees(elev,dtype=np.float16)
+                elev_deg = elev
                 elevations[index1, index2] = elev_deg
             #Update and append
             states[index1] = state
         return (dists, elevations, states)
+    
+    def _get_mooncentric_GW_pos(self, earth, t):
+        moon = - earth
+        gw_pos_earth_centred = self.Halo.get_HaloGW_pos(t, moon)
+        gw_pos = gw_pos_earth_centred + earth
+        return gw_pos
+
     
     @staticmethod
     def _move_to_state_evaluator(result_df: pd.DataFrame, event_grid) -> StateEvaluator:
