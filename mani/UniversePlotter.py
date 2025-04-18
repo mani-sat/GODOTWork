@@ -4,7 +4,7 @@ import godot
 from .VisibilityModel import VisibilityModel
 
 class Sphere():
-    def __init__(self, coordinates, radius, name, points = 100):
+    def __init__(self, coordinates, radius, name, points = 1000):
         """Helper function to plot a sphere."""
         self.centre = coordinates
         self.radius = radius
