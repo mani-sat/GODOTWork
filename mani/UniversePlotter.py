@@ -66,6 +66,15 @@ class UniversePlotter:
         self.gateway = godot_handler._get_mooncentric_GW_pos(self.earth,t)
         self.vismod = VisibilityModel()
         self.target_elevation = target_elevation
+        self.gs_name_long = self.get_name_long(gs)
+
+    def get_name_long(self, gs):
+        if gs == 'CB11':
+            return 'Cebreros'
+        elif gs == 'NN11':
+            return 'New Norcia'
+        elif gs == 'MG11':
+            return 'Malargue'
 
     def change_groundstation(self, gs):
         t = self.timestamp
