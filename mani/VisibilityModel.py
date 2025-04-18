@@ -161,7 +161,7 @@ class VisibilityModel:
         """
         rxy = np.sqrt(vec[0] * vec[0] + vec[1] * vec[1])
         elev = np.arctan2(vec[2], rxy)
-        return elev
+        return np.degrees(elev)
     
 if __name__ == "__main__":
     NN_moon_block = VisibilityModel()
