@@ -1,3 +1,4 @@
+from utils_luke import to_standard_units, formatter, rodrigues
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial.transform import Rotation as R
@@ -85,8 +86,10 @@ class HaloOrbit:
         new_HaloData=np.zeros((len(self.HaloData), 3))
         Rot_mat=self.rotation_matrix(init_axis, init_angle)
         for i, HaloPos in enumerate(self.HaloData):
+            haloLen=np.linalg.norm(HaloPos)
             pos=Rot_mat@HaloPos[1:]
             new_HaloData[i]=pos
+            # new_HaloData[i]=pos/np.linalg.norm(pos) *(moon_len+haloLen)
         #add time on data
         new_HaloData=np.insert(new_HaloData.T, 0, self.HaloData.T[0], axis=0).T
         return new_HaloData
@@ -126,28 +129,44 @@ class HaloOrbit:
 
         HaloOrbitPos = np.array(self.new_HaloData[self.closest_time(time, orbits, self.HaloOrbitTime, self.new_HaloData)])
         HaloOrbitPos = HaloOrbitPos[1:]
+        HaloOrbitLen = np.linalg.norm(HaloOrbitPos)
+        moonLen=np.linalg.norm(moonPos)
 
         Proj = np.eye(3)-np.outer(self.rot_axis, self.rot_axis)
         moonPos = Proj @ moonPos
         angle = self.find_angle(self.init_moon_point, moonPos, self.rot_axis)
         rotation_mat = self.rotation_matrix(self.rot_axis, angle)
         pos=HaloOrbitPos @ rotation_mat
+        # return pos / np.linalg.norm(pos) * (moonLen + HaloOrbitLen)
         return pos
     
-def Create_halo_point(moonData, epoch0):
+def Create_halo_point(moonData, epoch0, grid):
     Halo_orbit = HaloOrbit(epoch0)
     Halo_orbit.load_Halo_Data("HaloOrbit/GateWayOrbit_prop.csv")
     Halo_orbit.translate_to_orbit_plane(moonData)
+    emph=np.zeros((len(grid), 3))
     for i, ep in enumerate(grid):
         point=moonData[i]
         pos=Halo_orbit.get_HaloGW_pos(ep, point)
-        print(pos)
+        emph[i]=pos
+    return emph
+
+def Create_halo_point_moon_index(moonData, epoch0, grid, index):
+    Halo_orbit = HaloOrbit(epoch0)
+    Halo_orbit.load_Halo_Data("HaloOrbit/GateWayOrbit_prop.csv")
+    Halo_orbit.translate_to_orbit_plane(moonData)
+    emph=np.zeros((len(grid), 3))
+    point=moonData[index]
+    for i, ep in enumerate(grid):
+        pos=Halo_orbit.get_HaloGW_pos(ep, point)
+        emph[i]=pos
+    return emph
 
 
 
 
 if __name__=="__main__":
-    from utils_luke import to_standard_units, formatter, rodrigues
+    
     import time
     t1 = time.perf_counter()
     # os.chdir("../")
@@ -166,5 +185,15 @@ if __name__=="__main__":
 
     moonData=np.asarray([frames.vector3(earthPoint, moonPoint, icrf, ep) for ep in grid])
 
-    emph = Create_halo_point(moonData, ep1)
+    
+    # emph = Create_halo_point(moonData, ep1, grid)
+    rand_index=np.random.randint(0, len(grid), 10)
+    fig=plt.figure(figsize=(10,10))
+    ax = fig.add_subplot(111, projection="3d")
+    for index in rand_index:
+        emph=Create_halo_point_moon_index(moonData, ep1, grid, index)
+        ax.plot(*emph.T, color="black")
+        ax.scatter(*moonData[index].T, color="yellow")
+    plt.savefig("test.png")
+
     print(time.perf_counter() - t1)
