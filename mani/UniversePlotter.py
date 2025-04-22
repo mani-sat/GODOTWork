@@ -89,19 +89,19 @@ class UniversePlotter:
         Sphere(self.earth, self.earth_radius, 'Earth').plot(ax, 'forestgreen', 0.25)
     
     def plot_spacecraft(self, ax):
-        ax.scatter(*(self.spacecraft), color='blue', s = 50, label = 'Spacecraft')
-        #Sphere(self.spacecraft, 100, 'Spacecraft').plot(ax, 'blue',1)
+        # ax.scatter(*(self.spacecraft), color='blue', s = 50, label = 'Spacecraft')
+        Sphere(self.spacecraft, 100, 'Spacecraft').plot(ax, 'blue',1)
     
     def plot_gateway(self, ax):
-        ax.scatter(*(self.gateway), color='cyan', s = 50, label = 'Gateway')
-        #Sphere(self.gateway, 100, 'Gateway').plot(ax,'cyan',1)
+        # ax.scatter(*(self.gateway), color='cyan', s = 50, label = 'Gateway')
+        Sphere(self.gateway, 100, 'Gateway').plot(ax,'cyan',1)
     
     def plot_sun_plane(self, ax, size = 1000):
         Plane(self.moon, self.sun, size, 100).plot(ax, 1000)
     
     def plot_groundstation(self,ax):
-        ax.scatter(*(self.groundstation), color = 'purple', s = 100, label = self.groundstation_name)
-        #Sphere(self.groundstation, 500, self.groundstation_name).plot(ax,'purple',1)
+        # ax.scatter(*(self.groundstation), color = 'purple', s = 100, label = self.groundstation_name)
+        Sphere(self.groundstation, 500, self.groundstation_name).plot(ax,'purple',1)
     
     def plot_gs_vec(self,ax):
         elevation = self.vismod.get_elevation(self.elevation)
@@ -134,6 +134,8 @@ class UniversePlotter:
         ax.legend()
 
     def set_view_earth_focuced(self, ax, view_distance = 5000):
+
+        #ax.set_aspect('equal', adjustable='box')
         """Set axis limits based on the desired view."""
         earth = self.earth
         ax.set_xlim([earth[0]-view_distance, earth[0]+view_distance])
@@ -142,6 +144,7 @@ class UniversePlotter:
 
     def set_view_moon_focuced(self, ax, view_distance = 2000):
         """Set axis limits based on the desired view."""
+        #ax.set_aspect('equal', adjustable='box')
         moon = self.moon
         ax.set_xlim([moon[0]-view_distance, moon[0]+view_distance])
         ax.set_ylim([moon[1]-view_distance, moon[1]+view_distance])
