@@ -68,30 +68,48 @@ class HaloOrbit:
         """
         Create rotation axis
         """
+        rot_axis/=np.linalg.norm(rot_axis)
         R=np.array([[rot_axis[0]**2*(1-np.cos(angle))+np.cos(angle),                        rot_axis[0]*rot_axis[1]*(1-np.cos(angle))-rot_axis[2]*np.sin(angle),    rot_axis[0]*rot_axis[2]*(1-np.cos(angle))+rot_axis[1]*np.sin(angle)],
                     [rot_axis[0]*rot_axis[1]*(1-np.cos(angle))+rot_axis[2]*np.sin(angle),   rot_axis[1]**2*(1-np.cos(angle))+np.cos(angle),                         rot_axis[1]*rot_axis[2]*(1-np.cos(angle))-rot_axis[0]*np.sin(angle)],
                     [rot_axis[0]*rot_axis[2]*(1-np.cos(angle))-rot_axis[1]*np.sin(angle),   rot_axis[1]*rot_axis[2]*(1-np.cos(angle))+rot_axis[0]*np.sin(angle),    rot_axis[2]**2*(1-np.cos(angle))+np.cos(angle)]])
         return R
+    def rotate_plane(self, plane1, plane2):
+        # xy_plane=np.array([0,0,1])
+        #rot_axis
+        plane_axis=np.cross(plane1, plane2)
+        plane_angle=np.dot(plane1, plane2)/(np.linalg.norm(plane1)*np.linalg.norm(plane2))
+        plane_angle=np.arccos(plane_angle)
 
-    def translate_HaloOrbit_to_plane(self, init_moonPoint):
+        new_HaloData=np.zeros((len(self.HaloData), 3))
+        Rot_mat=self.rotation_matrix(plane_axis, plane_angle)
+        self.x_moon=self.x_moon @ Rot_mat
+        for i, HaloPos in enumerate(self.HaloData):
+            pos=Rot_mat@HaloPos[1:]
+            new_HaloData[i]=pos
+
+        new_HaloData=np.insert(new_HaloData.T, 0, self.HaloData.T[0], axis=0).T
+        return new_HaloData
+        
+    def translate_HaloOrbit_to_plane(self, init_moonPoint, haloData):
         """
         move halo orbit from x-axis positioned moon, to point on lunar orbit
         """
+        #rotate plane
         init_axis=np.cross(init_moonPoint, self.x_moon)
         init_axis/=np.linalg.norm(init_axis)
         init_angle=np.dot(self.x_moon, init_moonPoint)/(np.linalg.norm(init_moonPoint)*np.linalg.norm(self.x_moon))
         init_angle=-np.arccos(init_angle)
         moon_len=np.linalg.norm(init_moonPoint)
 
-        new_HaloData=np.zeros((len(self.HaloData), 3))
+        new_HaloData=np.zeros((len(haloData), 3))
         Rot_mat=self.rotation_matrix(init_axis, init_angle)
-        for i, HaloPos in enumerate(self.HaloData):
+        for i, HaloPos in enumerate(haloData):
             haloLen=np.linalg.norm(HaloPos)
             pos=Rot_mat@HaloPos[1:]
             new_HaloData[i]=pos
             # new_HaloData[i]=pos/np.linalg.norm(pos) *(moon_len+haloLen)
         #add time on data
-        new_HaloData=np.insert(new_HaloData.T, 0, self.HaloData.T[0], axis=0).T
+        new_HaloData=np.insert(new_HaloData.T, 0, haloData.T[0], axis=0).T
         return new_HaloData
 
     def closest_time(self, time, orbits, HaloOrbitTime, HaloData):
@@ -117,11 +135,14 @@ class HaloOrbit:
         sign = np.sign(np.dot(np.cross(init_moonPoint, moonPos), rot_axis))
         return sign*angle
 
-    
+
+
+
     def translate_to_orbit_plane(self, moonData):
         self.rot_axis=self.find_rotation_axis(moonData)
         self.init_moon_point=self.get_initial_point_on_plane(moonData)
-        self.new_HaloData=self.translate_HaloOrbit_to_plane(self.init_moon_point)
+        intermediate_data=self.rotate_plane(np.array([0,0,1]), self.rot_axis)
+        self.new_HaloData=self.translate_HaloOrbit_to_plane(self.init_moon_point, intermediate_data)
 
     def get_HaloGW_pos(self, ep, moonPos):
         time = self.epoch_to_seconds(ep)
@@ -147,8 +168,9 @@ def Create_halo_point(moonData, epoch0, grid):
     emph=np.zeros((len(grid), 3))
     for i, ep in enumerate(grid):
         point=moonData[i]
+        moonLen=np.linalg.norm(point)
         pos=Halo_orbit.get_HaloGW_pos(ep, point)
-        emph[i]=pos
+        emph[i]=pos/np.linalg.norm(pos)*moonLen
     return emph
 
 def Create_halo_point_moon_index(moonData, epoch0, grid, index):
@@ -157,9 +179,10 @@ def Create_halo_point_moon_index(moonData, epoch0, grid, index):
     Halo_orbit.translate_to_orbit_plane(moonData)
     emph=np.zeros((len(grid), 3))
     point=moonData[index]
+    moonLen=np.linalg.norm(point)
     for i, ep in enumerate(grid):
         pos=Halo_orbit.get_HaloGW_pos(ep, point)
-        emph[i]=pos
+        emph[i]=pos/np.linalg.norm(pos)*moonLen
     return emph
 
 
