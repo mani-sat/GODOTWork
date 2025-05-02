@@ -1,10 +1,11 @@
-<<<<<<< HEAD:HaloOrbit/HaloOrbit.py
-=======
-from .utils_luke import to_standard_units
-
->>>>>>> a4d56f3ccfe2c770e3dae24c3fe5240bdc6b3e8a:mani/HaloOrbit/HaloOrbit.py
+from utils_luke import to_standard_units, formatter, rodrigues
 import numpy as np
+import matplotlib.pyplot as plt
+from scipy.spatial.transform import Rotation as R
+from godot.core import tempo, astro, events
+from godot.core.autodif import bridge as br
 from godot import cosmos
+from godot.model import eventgen, common, prop
 import godot.core.util as util
 from sklearn.decomposition import PCA
 util.suppressLogger()
@@ -67,27 +68,48 @@ class HaloOrbit:
         """
         Create rotation axis
         """
+        rot_axis/=np.linalg.norm(rot_axis)
         R=np.array([[rot_axis[0]**2*(1-np.cos(angle))+np.cos(angle),                        rot_axis[0]*rot_axis[1]*(1-np.cos(angle))-rot_axis[2]*np.sin(angle),    rot_axis[0]*rot_axis[2]*(1-np.cos(angle))+rot_axis[1]*np.sin(angle)],
                     [rot_axis[0]*rot_axis[1]*(1-np.cos(angle))+rot_axis[2]*np.sin(angle),   rot_axis[1]**2*(1-np.cos(angle))+np.cos(angle),                         rot_axis[1]*rot_axis[2]*(1-np.cos(angle))-rot_axis[0]*np.sin(angle)],
                     [rot_axis[0]*rot_axis[2]*(1-np.cos(angle))-rot_axis[1]*np.sin(angle),   rot_axis[1]*rot_axis[2]*(1-np.cos(angle))+rot_axis[0]*np.sin(angle),    rot_axis[2]**2*(1-np.cos(angle))+np.cos(angle)]])
         return R
+    def rotate_plane(self, plane1, plane2):
+        # xy_plane=np.array([0,0,1])
+        #rot_axis
+        plane_axis=np.cross(plane1, plane2)
+        plane_angle=np.dot(plane1, plane2)/(np.linalg.norm(plane1)*np.linalg.norm(plane2))
+        plane_angle=np.arccos(plane_angle)
 
-    def translate_HaloOrbit_to_plane(self, init_moonPoint):
+        new_HaloData=np.zeros((len(self.HaloData), 3))
+        Rot_mat=self.rotation_matrix(plane_axis, plane_angle)
+        self.x_moon=self.x_moon @ Rot_mat
+        for i, HaloPos in enumerate(self.HaloData):
+            pos=Rot_mat@HaloPos[1:]
+            new_HaloData[i]=pos
+
+        new_HaloData=np.insert(new_HaloData.T, 0, self.HaloData.T[0], axis=0).T
+        return new_HaloData
+        
+    def translate_HaloOrbit_to_plane(self, init_moonPoint, haloData):
         """
         move halo orbit from x-axis positioned moon, to point on lunar orbit
         """
+        #rotate plane
         init_axis=np.cross(init_moonPoint, self.x_moon)
         init_axis/=np.linalg.norm(init_axis)
         init_angle=np.dot(self.x_moon, init_moonPoint)/(np.linalg.norm(init_moonPoint)*np.linalg.norm(self.x_moon))
         init_angle=-np.arccos(init_angle)
+        moon_len=np.linalg.norm(init_moonPoint)
 
-        new_HaloData=np.zeros((len(self.HaloData), 3))
+        new_HaloData=np.zeros((len(haloData), 3))
         Rot_mat=self.rotation_matrix(init_axis, init_angle)
-        for i, HaloPos in enumerate(self.HaloData):
+        for i, HaloPos in enumerate(haloData):
+            haloLen=np.linalg.norm(HaloPos)
             pos=Rot_mat@HaloPos[1:]
             new_HaloData[i]=pos
+            # new_HaloData[i]=pos/np.linalg.norm(pos) *(moon_len+haloLen)
         #add time on data
-        new_HaloData=np.insert(new_HaloData.T, 0, self.HaloData.T[0], axis=0).T
+        new_HaloData=np.insert(new_HaloData.T, 0, haloData.T[0], axis=0).T
         return new_HaloData
 
     def closest_time(self, time, orbits, HaloOrbitTime, HaloData):
@@ -109,28 +131,18 @@ class HaloOrbit:
         """
         find the angle between the initial moon position and the current moon position
         """
-        n1 = init_moonPoint / np.linalg.norm(init_moonPoint)
-        n2 = moonPos / np.linalg.norm(moonPos)
-        d = np.dot(n1, n2)
-        d = np.clip(d, a_min=-1.0, a_max=1.0)
-        try:
-            angle = -np.arccos(d)
-            assert np.abs(d) <= 1.0
-        except:
-            print("Error")
-            print(d)
-            print(init_moonPoint.dtype)
-            print(moonPos.dtype)
-            print(init_moonPoint)
-            print(moonPos)
+        angle = -np.arccos(np.dot(init_moonPoint, moonPos)/(np.linalg.norm(init_moonPoint)*np.linalg.norm(moonPos)))
         sign = np.sign(np.dot(np.cross(init_moonPoint, moonPos), rot_axis))
         return sign*angle
 
-    
+
+
+
     def translate_to_orbit_plane(self, moonData):
         self.rot_axis=self.find_rotation_axis(moonData)
         self.init_moon_point=self.get_initial_point_on_plane(moonData)
-        self.new_HaloData=self.translate_HaloOrbit_to_plane(self.init_moon_point)
+        intermediate_data=self.rotate_plane(np.array([0,0,1]), self.rot_axis)
+        self.new_HaloData=self.translate_HaloOrbit_to_plane(self.init_moon_point, intermediate_data)
 
     def get_HaloGW_pos(self, ep, moonPos):
         time = self.epoch_to_seconds(ep)
@@ -138,46 +150,54 @@ class HaloOrbit:
 
         HaloOrbitPos = np.array(self.new_HaloData[self.closest_time(time, orbits, self.HaloOrbitTime, self.new_HaloData)])
         HaloOrbitPos = HaloOrbitPos[1:]
+        HaloOrbitLen = np.linalg.norm(HaloOrbitPos)
+        moonLen=np.linalg.norm(moonPos)
 
         Proj = np.eye(3)-np.outer(self.rot_axis, self.rot_axis)
         moonPos = Proj @ moonPos
         angle = self.find_angle(self.init_moon_point, moonPos, self.rot_axis)
         rotation_mat = self.rotation_matrix(self.rot_axis, angle)
         pos=HaloOrbitPos @ rotation_mat
+        # return pos / np.linalg.norm(pos) * (moonLen + HaloOrbitLen)
         return pos
     
-def Create_halo_point(moonData, epoch0):
+def Create_halo_point(moonData, epoch0, grid):
     Halo_orbit = HaloOrbit(epoch0)
-    Halo_orbit.load_Halo_Data("./GateWayOrbit_prop.csv")
+    Halo_orbit.load_Halo_Data("mani/HaloOrbit/GateWayOrbit_prop.csv")
     Halo_orbit.translate_to_orbit_plane(moonData)
+    emph=np.zeros((len(grid), 3))
     for i, ep in enumerate(grid):
-        print(i)
         point=moonData[i]
+        moonLen=np.linalg.norm(point)
         pos=Halo_orbit.get_HaloGW_pos(ep, point)
-        #print(pos)
+        emph[i]=pos/np.linalg.norm(pos)*moonLen
+    return emph
+
+def Create_halo_point_moon_index(moonData, epoch0, grid, index):
+    Halo_orbit = HaloOrbit(epoch0)
+    Halo_orbit.load_Halo_Data("mani/HaloOrbit/GateWayOrbit_prop.csv")
+    Halo_orbit.translate_to_orbit_plane(moonData)
+    emph=np.zeros((len(grid), 3))
+    point=moonData[index]
+    moonLen=np.linalg.norm(point)
+    for i, ep in enumerate(grid):
+        pos=Halo_orbit.get_HaloGW_pos(ep, point)
+        emph[i]=pos/np.linalg.norm(pos)*moonLen
+    return emph
 
 
 
 
 if __name__=="__main__":
-<<<<<<< HEAD:HaloOrbit/HaloOrbit.py
-    from utils_luke import to_standard_units, formatter, rodrigues
-=======
-    from utils_luke import to_standard_units
-    from godot.core import tempo
->>>>>>> a4d56f3ccfe2c770e3dae24c3fe5240bdc6b3e8a:mani/HaloOrbit/HaloOrbit.py
+    
     import time
-
     t1 = time.perf_counter()
     # os.chdir("../")
     uni_config=cosmos.util.load_yaml("./universe2.yml")
     uni = cosmos.Universe(uni_config)
 
-    # ep1 = tempo.Epoch('2026-01-01T00:00:00 TT')
-    # ep2 = tempo.Epoch('2026-02-01T00:00:00 TT')
-
-    ep1 = tempo.Epoch('2026-06-02T00:00:00 TDB')
-    ep2 = tempo.Epoch('2026-06-02T02:00:00 TDB')
+    ep1 = tempo.Epoch('2026-01-01T00:00:00 TT')
+    ep2 = tempo.Epoch('2026-01-10T00:00:00 TT')
     ran = tempo.EpochRange( ep1, ep2 )
     timestep = 1.0
     grid = ran.createGrid(timestep) # 60 seconds stepsize
@@ -188,5 +208,15 @@ if __name__=="__main__":
 
     moonData=np.asarray([frames.vector3(earthPoint, moonPoint, icrf, ep) for ep in grid])
 
-    emph = Create_halo_point(moonData, ep1)
+    
+    # emph = Create_halo_point(moonData, ep1, grid)
+    rand_index=np.random.randint(0, len(grid), 10)
+    fig=plt.figure(figsize=(10,10))
+    ax = fig.add_subplot(111, projection="3d")
+    for index in rand_index:
+        emph=Create_halo_point_moon_index(moonData, ep1, grid, index)
+        ax.plot(*emph.T, color="black")
+        ax.scatter(*moonData[index].T, color="yellow")
+    plt.savefig("test.png")
+
     print(time.perf_counter() - t1)
