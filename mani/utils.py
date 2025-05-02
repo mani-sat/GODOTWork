@@ -118,8 +118,8 @@ def get_view_times_spans(times, conditions:pd.Series) -> np.ndarray:
     vals = np.concatenate([false_arr, vals, false_arr])
     rising_edges = vals[0:-1] < vals[1:]
     falling_edges = vals[0:-1] > vals[1:]
-    rising_edge_times = times.iloc[rising_edges[1:]]
-    falling_edge_times = times.iloc[falling_edges[1:]]
+    rising_edge_times = times.iloc[rising_edges[:-1]]
+    falling_edge_times = times.iloc[falling_edges[:-1]]
     view_time_span = np.array([rising_edge_times.values, falling_edge_times.values])
 
     return view_time_span

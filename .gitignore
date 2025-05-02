@@ -4,3 +4,4 @@ venv
 *.pickle
 
 __pycache__
+output/*
