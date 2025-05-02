@@ -2,5 +2,6 @@ share
 venv
 *.pyc
 *.pickle
+*.png
 
 __pycache__

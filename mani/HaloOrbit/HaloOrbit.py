@@ -1,12 +1,4 @@
-<<<<<<< HEAD:mani/HaloOrbit/HaloOrbit.py
-<<<<<<< HEAD:HaloOrbit/HaloOrbit.py
-=======
-from .utils_luke import to_standard_units
-
->>>>>>> a4d56f3ccfe2c770e3dae24c3fe5240bdc6b3e8a:mani/HaloOrbit/HaloOrbit.py
-=======
-from utils_luke import to_standard_units, formatter, rodrigues
->>>>>>> HaloOrbit_UtinTest:HaloOrbit/HaloOrbit.py
+from utils_luke import to_standard_units
 import numpy as np
 from godot import cosmos
 import godot.core.util as util
@@ -182,15 +174,13 @@ def Create_halo_point(moonData, epoch0, grid):
         point=moonData[i]
         moonLen=np.linalg.norm(point)
         pos=Halo_orbit.get_HaloGW_pos(ep, point)
-<<<<<<< HEAD:mani/HaloOrbit/HaloOrbit.py
         #print(pos)
-=======
         emph[i]=pos/np.linalg.norm(pos)*moonLen
     return emph
 
 def Create_halo_point_moon_index(moonData, epoch0, grid, index):
     Halo_orbit = HaloOrbit(epoch0)
-    Halo_orbit.load_Halo_Data("HaloOrbit/GateWayOrbit_prop.csv")
+    Halo_orbit.load_Halo_Data("mani/HaloOrbit/GateWayOrbit_prop.csv")
     Halo_orbit.translate_to_orbit_plane(moonData)
     emph=np.zeros((len(grid), 3))
     point=moonData[index]
@@ -199,22 +189,14 @@ def Create_halo_point_moon_index(moonData, epoch0, grid, index):
         pos=Halo_orbit.get_HaloGW_pos(ep, point)
         emph[i]=pos/np.linalg.norm(pos)*moonLen
     return emph
->>>>>>> HaloOrbit_UtinTest:HaloOrbit/HaloOrbit.py
 
 
 
 
 if __name__=="__main__":
-<<<<<<< HEAD:mani/HaloOrbit/HaloOrbit.py
-<<<<<<< HEAD:HaloOrbit/HaloOrbit.py
-    from utils_luke import to_standard_units, formatter, rodrigues
-=======
-    from utils_luke import to_standard_units
+    # from utils_luke import to_standard_units
     from godot.core import tempo
->>>>>>> a4d56f3ccfe2c770e3dae24c3fe5240bdc6b3e8a:mani/HaloOrbit/HaloOrbit.py
-=======
-    
->>>>>>> HaloOrbit_UtinTest:HaloOrbit/HaloOrbit.py
+    import matplotlib.pyplot as plt
     import time
 
     t1 = time.perf_counter()
@@ -226,7 +208,7 @@ if __name__=="__main__":
     # ep2 = tempo.Epoch('2026-02-01T00:00:00 TT')
 
     ep1 = tempo.Epoch('2026-06-02T00:00:00 TDB')
-    ep2 = tempo.Epoch('2026-06-02T02:00:00 TDB')
+    ep2 = tempo.Epoch('2026-06-02T04:00:00 TDB')
     ran = tempo.EpochRange( ep1, ep2 )
     timestep = 1.0
     grid = ran.createGrid(timestep) # 60 seconds stepsize
