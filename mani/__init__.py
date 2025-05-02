@@ -1,4 +1,4 @@
-from .StateEvaluator import StateEvaluator, SEEnum
+from .StateEvaluator import StateEvaluator, SEEnum, SatState
 from .VisibilityModel import VisibilityModel
 from .GodotEvaluator import GodotHandler
 from .HaloOrbit import HaloOrbit

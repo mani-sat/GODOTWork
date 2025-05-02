@@ -12,9 +12,27 @@ class SEEnum(enum.IntFlag):
     CLEAR_MOON_MG = enum.auto()
     LOS_GW = enum.auto()
 
+class SatState(enum.IntEnum):
+    IDLE = enum.auto()
+    LP_COMM = enum.auto()
+    HP_COMM = enum.auto()
+    SCIENCE = enum.auto()
+
 class StateEvaluator:
     def __init__(self, df: pd.DataFrame):
+        self.min_elevaion = 10.0
         self.df = df
+
+    def set_internal_min_elevation(self, min_elevation:np.float16):
+        """ 
+        Set the minimum elevation used to evaluate states as los coloumns
+
+        Parameters
+        ----------
+        min_elevation : np.float16
+            The elevation at which LOS is determined
+        """
+        self.min_elevaion = min_elevation
 
     def elv(self, station: str) -> pd.Series:
         """
@@ -70,6 +88,21 @@ class StateEvaluator:
         # Vectorized check: each row should have all bits set
         return (self.df['state'] & combined_flag) == combined_flag
     
+    def add_los_coloumns(self):
+        """
+        Add coloums containing the LOS states of the groundstations.
+        """
+        los_nn = self.above_elev('NN11', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_NN])
+        if not ('los_nn' in self.df.keys()):
+            self.df.insert(len(self.df.keys()),'los_nn',los_nn)
+        los_cb = self.above_elev('CB11', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_CB])
+        if not ('los_cb' in self.df.keys()):
+            self.df.insert(len(self.df.keys()),'los_cb',los_cb)
+        los_mg = self.above_elev('MG11', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_MG])
+        if not ('los_mg' in self.df.keys()):
+            self.df.insert(len(self.df.keys()),'los_mg',los_mg)
+         
+    
     def has_not(self, flags: list[SEEnum]) -> pd.Series:
         """
         Checks if state does not have flag.
@@ -115,3 +148,31 @@ class StateEvaluator:
         
         """
         return self.df.keys()
+    
+    def get_state(self):
+        """
+        Fetches the various flags, and returns the equivalent states
+
+        
+        """
+        los_nn = self.above_elev('NN11', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_NN])
+        los_cb = self.above_elev('CB11', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_CB])
+        los_mg = self.above_elev('MG11', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_MG])
+        los = los_nn | los_cb | los_mg
+        som = self.has([SEEnum.SUN_ON_MOON])
+        sos = self.has([SEEnum.SUN_ON_SPACECRAFT])
+
+        # Start with all IDLE
+        s = pd.Series(SatState.IDLE, index=self.df.index, dtype="int")
+
+        # Set PURE_SCIENCE where som is True
+        s[som] = SatState.SCIENCE
+
+        # Set HP_COMM where los and sos are True, but not som
+        s[los & sos & ~som] = SatState.HP_COMM
+
+        # Set LP_COMM where los is True, sos is False, and not som
+        s[los & ~sos & ~som] = SatState.LP_COMM
+
+        # Cast to SatState enum type
+        return s.map(SatState)
