@@ -1,4 +1,4 @@
-from utils_luke import to_standard_units, formatter, rodrigues
+from .utils_luke import to_standard_units, formatter, rodrigues
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial.transform import Rotation as R
