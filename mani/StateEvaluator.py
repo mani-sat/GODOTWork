@@ -84,7 +84,7 @@ class StateEvaluator:
             Returns True is all flags are True
         """
 
-        combined_flag = reduce(operator.or_, flags)
+        combined_flag = np.array(reduce(operator.or_, flags))
         # Vectorized check: each row should have all bits set
         return (self.df['state'] & combined_flag) == combined_flag
     
