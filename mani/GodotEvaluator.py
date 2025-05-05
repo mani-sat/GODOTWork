@@ -10,7 +10,7 @@ import godot.core.util as util
 
 from .VisibilityModel import VisibilityModel
 from .StateEvaluator import SEEnum, StateEvaluator
-from .utils import EventGrid
+from .utils import EventGrid, get_len
 from .HaloOrbit.HaloOrbit import HaloOrbit
 
 util.suppressLogger()
@@ -57,23 +57,29 @@ class GodotHandler:
             pool.close()
             pool.join()
         
-        dists_list = []
+        gw_dists_list = []
+        st_dists_list = []
         states_list = []
         elevations_list = []
-        for dist, elev, state in tqdm(pool_results):
-            dists_list.append(dist)
+        for gw_dist, elev, state, st_dist in tqdm(pool_results):
+            st_dists_list.append(st_dist)
+            gw_dists_list.append(gw_dist)
             elevations_list.append(elev)
             states_list.append(state)
 
 
-        dists_all = np.concatenate(dists_list)
+        gw_dists_all = np.concatenate(gw_dists_list)
+        st_dists_all = np.concatenate(st_dists_list)
         states_all = np.concatenate(states_list)
         elevs_all = np.concatenate(elevations_list)
         df = pd.DataFrame({
-            'gw_dist': dists_all,
-            'NN11': elevs_all[:, 0],
-            'CB11': elevs_all[:, 1],
-            'MG11': elevs_all[:, 2],
+            'gw_dist': gw_dists_all,
+            'NN11_elev': elevs_all[:, 0],
+            'CB11_elev': elevs_all[:, 1],
+            'MG11_elev': elevs_all[:, 2],
+            'NN11_dist': st_dists_all[:, 0],
+            'CB11_dist': st_dists_all[:, 1],
+            'MG11_dist': st_dists_all[:, 2],
             'state': states_all
         })
         return df
@@ -95,9 +101,10 @@ class GodotHandler:
         uni = self.fetch_universe()
 
         list_length = len(t_list)
-        dists = np.empty(list_length, dtype=np.uint32)
+        gw_dists = np.empty(list_length, dtype=np.uint32)
         states = np.empty(list_length, dtype=np.uint8)
         elevations = np.empty((list_length,3), dtype=np.float16)
+        st_dists = np.empty((list_length,3), dtype=np.float32)
 
         stations = {
             'NN11' : SEEnum.CLEAR_MOON_NN,
@@ -114,7 +121,7 @@ class GodotHandler:
             sc = uni.frames.vector3('Moon','SC', 'ICRF', t)
 
             gw_pos = self._get_mooncentric_GW_pos(earth, t)
-            dists[index1] = np.linalg.norm(gw_pos - sc)
+            gw_dists[index1] = np.linalg.norm(gw_pos - sc)
             gw_los = vismod.los_from_gs_to_sc(gw_pos, sc)
             state = self.update_bit(state, SEEnum.LOS_GW, gw_los)
 
@@ -129,6 +136,7 @@ class GodotHandler:
                 # Get vector that are dependent on station
                 ground_station = uni.frames.vector3('Moon',station, 'ICRF', t)
                 gs_sc = uni.frames.vector3(station,'SC',station,t)
+                st_dists[index1, index2] = get_len(gs_sc)
                 lfgts = vismod.los_from_gs_to_sc(sc, ground_station)
                 state = self.update_bit(state, enum, lfgts)
                 elev = vismod.get_elevation(gs_sc)
@@ -136,7 +144,7 @@ class GodotHandler:
                 elevations[index1, index2] = elev_deg
             #Update and append
             states[index1] = state
-        return (dists, elevations, states)
+        return (gw_dists, elevations, states, st_dists)
     
     def _get_mooncentric_GW_pos(self, earth, t):
         moon = - earth

@@ -34,6 +34,17 @@ class StateEvaluator:
         """
         self.min_elevaion = min_elevation
 
+    def get_length(self):
+        """ 
+        Get the length of the dataframe
+
+        Returns
+        -------
+        int
+            The length of the dataframe
+        """
+        return len(self.df)
+
     def elv(self, station: str) -> pd.Series:
         """
         Determine the elevation of the station.
@@ -92,13 +103,13 @@ class StateEvaluator:
         """
         Add coloums containing the LOS states of the groundstations.
         """
-        los_nn = self.above_elev('NN11', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_NN])
+        los_nn = self.above_elev('NN11_elev', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_NN])
         if not ('los_nn' in self.df.keys()):
             self.df.insert(len(self.df.keys()),'los_nn',los_nn)
-        los_cb = self.above_elev('CB11', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_CB])
+        los_cb = self.above_elev('CB11_elev', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_CB])
         if not ('los_cb' in self.df.keys()):
             self.df.insert(len(self.df.keys()),'los_cb',los_cb)
-        los_mg = self.above_elev('MG11', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_MG])
+        los_mg = self.above_elev('MG11_elev', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_MG])
         if not ('los_mg' in self.df.keys()):
             self.df.insert(len(self.df.keys()),'los_mg',los_mg)
          
@@ -155,9 +166,9 @@ class StateEvaluator:
 
         
         """
-        los_nn = self.above_elev('NN11', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_NN])
-        los_cb = self.above_elev('CB11', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_CB])
-        los_mg = self.above_elev('MG11', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_MG])
+        los_nn = self.above_elev('NN11_elev', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_NN])
+        los_cb = self.above_elev('CB11_elev', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_CB])
+        los_mg = self.above_elev('MG11_elev', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_MG])
         los = los_nn | los_cb | los_mg
         som = self.has([SEEnum.SUN_ON_MOON])
         sos = self.has([SEEnum.SUN_ON_SPACECRAFT])
