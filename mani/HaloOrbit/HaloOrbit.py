@@ -131,12 +131,25 @@ class HaloOrbit:
         """
         find the angle between the initial moon position and the current moon position
         """
-        angle = -np.arccos(np.dot(init_moonPoint, moonPos)/(np.linalg.norm(init_moonPoint)*np.linalg.norm(moonPos)))
+        # angle = -np.arccos(np.dot(init_moonPoint, moonPos)/(np.linalg.norm(init_moonPoint)*np.linalg.norm(moonPos)))
+        # sign = np.sign(np.dot(np.cross(init_moonPoint, moonPos), rot_axis))
+        # return sign*angle
+        n1 = init_moonPoint / np.linalg.norm(init_moonPoint)
+        n2 = moonPos / np.linalg.norm(moonPos)
+        d = np.dot(n1, n2)
+        d = np.clip(d, a_min=-1.0, a_max=1.0)
+        try:
+            angle = -np.arccos(d)
+            assert np.abs(d) <= 1.0
+        except:
+            print("Error")
+            print(d)
+            print(init_moonPoint.dtype)
+            print(moonPos.dtype)
+            print(init_moonPoint)
+            print(moonPos)
         sign = np.sign(np.dot(np.cross(init_moonPoint, moonPos), rot_axis))
         return sign*angle
-
-
-
 
     def translate_to_orbit_plane(self, moonData):
         self.rot_axis=self.find_rotation_axis(moonData)
