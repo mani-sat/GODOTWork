@@ -77,9 +77,11 @@ class GodotHandler:
             'NN11_elev': elevs_all[:, 0],
             'CB11_elev': elevs_all[:, 1],
             'MG11_elev': elevs_all[:, 2],
+            'AAU_elev' : elevs_all[:, 3],
             'NN11_dist': st_dists_all[:, 0],
             'CB11_dist': st_dists_all[:, 1],
             'MG11_dist': st_dists_all[:, 2],
+            'AAU_dist': st_dists_all[:, 3],
             'state': states_all
         })
         return df
@@ -103,13 +105,14 @@ class GodotHandler:
         list_length = len(t_list)
         gw_dists = np.empty(list_length, dtype=np.uint32)
         states = np.empty(list_length, dtype=np.uint8)
-        elevations = np.empty((list_length,3), dtype=np.float16)
-        st_dists = np.empty((list_length,3), dtype=np.float32)
+        elevations = np.empty((list_length, 4), dtype=np.float16)
+        st_dists = np.empty((list_length, 4), dtype=np.float32)
 
         stations = {
             'NN11' : SEEnum.CLEAR_MOON_NN,
             'CB11' : SEEnum.CLEAR_MOON_CB,
-            'MG11' : SEEnum.CLEAR_MOON_MG
+            'MG11' : SEEnum.CLEAR_MOON_MG,
+            'AAU' : SEEnum.CLEAR_MOON_AAU
             }
         
         for index1, t in enumerate(t_list):

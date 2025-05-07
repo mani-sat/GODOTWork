@@ -10,6 +10,7 @@ class SEEnum(enum.IntFlag):
     CLEAR_MOON_NN = enum.auto()
     CLEAR_MOON_CB = enum.auto()
     CLEAR_MOON_MG = enum.auto()
+    CLEAR_MOON_AAU = enum.auto()
     LOS_GW = enum.auto()
 
 class SatState(enum.IntEnum):
@@ -112,6 +113,9 @@ class StateEvaluator:
         los_mg = self.above_elev('MG11_elev', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_MG])
         if not ('los_mg' in self.df.keys()):
             self.df.insert(len(self.df.keys()),'los_mg',los_mg)
+        los_aau = self.above_elev('AAU_elev', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_AAU])
+        if not ('los_aau' in self.df.keys()):
+            self.df.insert(len(self.df.keys()),'los_aau',los_aau)
          
     
     def has_not(self, flags: list[SEEnum]) -> pd.Series:
@@ -169,7 +173,8 @@ class StateEvaluator:
         los_nn = self.above_elev('NN11_elev', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_NN])
         los_cb = self.above_elev('CB11_elev', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_CB])
         los_mg = self.above_elev('MG11_elev', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_MG])
-        los = los_nn | los_cb | los_mg
+        los_aau = self.above_elev('AAU_elev', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_AAU])
+        los = los_nn | los_cb | los_mg | los_aau
         som = self.has([SEEnum.SUN_ON_MOON])
         sos = self.has([SEEnum.SUN_ON_SPACECRAFT])
 

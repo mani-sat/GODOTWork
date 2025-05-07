@@ -8,8 +8,6 @@ import godot
 from godot.core import tempo, util
 util.suppressLogger()
 
-
-
 if __name__ == '__main__':
     args = sys.argv
     print(args)
@@ -21,8 +19,8 @@ if __name__ == '__main__':
 
     # create the universe
     print("Loading universe")
-    ep1 = tempo.Epoch(str(yearbegin)+'-01-01T00:00:00 TDB')
-    ep2 = tempo.Epoch(str(yearend)+'-01-01T00:00:00 TDB')
+    ep1 = tempo.Epoch(str(yearbegin)+'-01-01T00:00:00 TT')
+    ep2 = tempo.Epoch(str(yearend)+'-01-01T00:00:00 TT')
 
     print("Creating handler, calculating visibility")
     godotHandler = GodotHandler(ep1, ep2, 60.0, './universe2.yml')
