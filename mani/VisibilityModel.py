@@ -133,7 +133,6 @@ class VisibilityModel:
             The radius of the sphere, giving r
         
         """
-        #np.sum(np.power(centre - point, 2)) < np.power(radius, 2)
         distance = centre - point
         length_sq = (distance[0] * distance[0] + distance[1] * distance[1] + distance[2] * distance[2])
         radius_sq = radius * radius
@@ -146,13 +145,8 @@ class VisibilityModel:
 
         Parameters
         ----------
-        GS : str
-            The ground stations that the elevation is evaluated for
-        timestamp : godot.core.tempo.Epoch
-            Timestamp at which the function is evaluated
-        uni : godot.cosmos.universe
-            The universe to evaluate in. This contains ephemeresis,
-            nutations, reference frames etc.
+        vec : (np.ndarray)
+            Tropocentric vector from groundstation to spacecraft.
         
         Returns
         -------
