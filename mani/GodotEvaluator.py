@@ -154,7 +154,6 @@ class GodotHandler:
         gw_pos_earth_centred = self.Halo.get_HaloGW_pos(t, moon)
         gw_pos = gw_pos_earth_centred + earth
         return gw_pos
-
     
     @staticmethod
     def _move_to_state_evaluator(result_df: pd.DataFrame, event_grid) -> StateEvaluator:

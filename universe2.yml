@@ -7,12 +7,10 @@ spacetime:
 
 #! ephemeris
 ephemeris:
-  # Named ephemeris objects with files to load
   - name: de405
     files:
       - share/test/unxp2000.405
-    cache: false # Do not load file to memory
-  # Another ephemeris for constants, default is loading file contents to memory
+    cache: false
   - name: gm431
     files:
       - share/test/gm_de431.tpc
@@ -52,13 +50,7 @@ frames:
       nutation: share/test/nutation2000A.ipf   # Nutation model (optional)
       erp: ''               # Earth Rotation Parameters (optional)
 
-  - name: stations1
-    type: Stations
-    config:
-      source: earthStations
-      points: false
-
-  - name: stations2
+  - name: stations
     type: Stations
     config:
       source: earthStations
@@ -71,7 +63,7 @@ frames:
       epoch: 2026-04-01T00:00:00 TDB   # reference epoch
       sma: 1787.4 km   # Semi-major axes
       ecc: 0.00         # Eccentricity
-      inc: 90 deg    # Inclination
+      inc: 86 deg    # Inclination
       ran: 0 deg #73.23959 deg # RAAN
       aop: 0 deg #319.2485 deg # Argument of pericentre
       tan: 0 deg #3.360110 deg # True anomaly at reference epoch
@@ -84,45 +76,6 @@ frames:
       target: SC
       axes: CRA
 #! frames
-
-#! geometry
-geometry:
-  - name: SC_NN_Earth_Occultation_Geometric
-    type: Occultation
-    config:
-      observer: CB11
-      target: SC
-      occulter: Earth
-      occulterRadius: 6378.1366 km
-      solveLightTime: false
-
-  - name: SC_NN_Moon_Occultation_Geometric
-    type: Occultation
-    config:
-      observer: CB11
-      target: SC
-      occulter: Moon
-      occulterRadius: 1737.400 km
-      solveLightTime: false
-
-  - name: New_Norcia_Moon_Elevation
-    type: Elevation
-    config:
-      observer: NN11
-      target: SC
-
-  - name: Cebreros_Moon_Elevation
-    type: Elevation
-    config:
-      observer: CB11
-      target: SC
-
-  - name: Malargue_Moon_Elevation
-    type: Elevation
-    config:
-      observer: MG11
-      target: SC
-
 
 #! geometry
 bodies:
@@ -150,14 +103,3 @@ dynamics:
     type: Combined
     config:
       - solarSystemGravity
-
-spacecraft:
-  - name: GeoSat
-    mass: 1200 kg
-    srp:
-      area: 10 m^2
-      cr: 1.7
-    thrusters:
-      - name: main
-        thrust: 100 N
-        isp: 320 s
