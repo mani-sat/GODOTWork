@@ -3,6 +3,7 @@ venv
 *.pyc
 *.pickle
 *.png
+tmp/
 
 __pycache__
 output/*
