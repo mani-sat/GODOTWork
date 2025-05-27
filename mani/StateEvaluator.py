@@ -21,7 +21,7 @@ class SatState(enum.IntEnum):
 
 class StateEvaluator:
     def __init__(self, df: pd.DataFrame):
-        self.min_elevaion = 10.0
+        self.min_elevation = 10.0
         self.df = df
 
     def set_internal_min_elevation(self, min_elevation:np.float16):
@@ -34,6 +34,17 @@ class StateEvaluator:
             The elevation at which LOS is determined
         """
         self.min_elevaion = min_elevation
+
+    def get_length(self):
+        """ 
+        Get the length of the dataframe
+
+        Returns
+        -------
+        int
+            The length of the dataframe
+        """
+        return len(self.df)
 
     def get_length(self):
         """ 
@@ -164,11 +175,20 @@ class StateEvaluator:
         """
         return self.df.keys()
     
-    def get_state(self):
+    def get_state(self, stations:list[str]):
         """
         Fetches the various flags, and returns the equivalent states
 
-        
+                Parameters
+        ----------
+        stations : list[str]
+            A list containing the station names that should be used for states.
+
+        Raises
+        ------
+        ValueError:
+            If stations contains no stations
+            If stations contains a station that is not either NN11, CB11 or MG11
         """
         los_nn = self.above_elev('NN11_elev', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_NN])
         los_cb = self.above_elev('CB11_elev', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_CB])
