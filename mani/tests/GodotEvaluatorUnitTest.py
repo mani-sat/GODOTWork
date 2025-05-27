@@ -8,7 +8,7 @@ class TestStateMachine(unittest.TestCase):
         super().__init__(methodName)
     
     def getSEfromGodot(self, t) -> StateEvaluator:
-        godotHandler = GodotHandler(t, t, 30.0, './universe2.yml')
+        godotHandler = GodotHandler(t, t, 30.0, './universe.yml')
         results = godotHandler._evaluate_timestamps([t])
         res = godotHandler._move_to_StateEvaluator(results, t)
         return res
@@ -63,7 +63,7 @@ class TestStateMachine(unittest.TestCase):
 
     def testLogic(self):
         t = Epoch('2026-04-02T17:20:00 TDB')
-        godotHandler = GodotHandler(t, t, 30.0, './universe2.yml')
+        godotHandler = GodotHandler(t, t, 30.0, './universe.yml')
         uni = godotHandler.fetch_universe()
         earth = uni.frames.vector3('Moon', 'Earth', 'ICRF', t)
         moon = uni.frames.vector3('Earth', 'Moon', 'ICRF', t)
@@ -72,7 +72,7 @@ class TestStateMachine(unittest.TestCase):
             self.assertAlmostEqual(-earth[i], moon[i])
 
     def testTimeSpan(self):
-        universe_file = './universe2.yml'
+        universe_file = './universe.yml'
         ep1 = Epoch('2026-06-02T00:00:00 TDB')
         ep2 = Epoch('2026-06-02T01:00:00 TDB')
         godotHandler = GodotHandler(ep1, ep2, 30.0, universe_file)

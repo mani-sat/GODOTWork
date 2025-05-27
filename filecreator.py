@@ -4,7 +4,6 @@ import pickle
 
 from mani import GodotHandler
 
-import godot
 from godot.core import tempo, util
 util.suppressLogger()
 
@@ -23,7 +22,7 @@ if __name__ == '__main__':
     ep2 = tempo.Epoch(str(yearend)+'-01-01T00:00:00 TT')
 
     print("Creating handler, calculating visibility")
-    godotHandler = GodotHandler(ep1, ep2, 60.0, './universe2.yml')
+    godotHandler = GodotHandler(ep1, ep2, 60.0, './universe.yml')
     res = godotHandler.calculate_visibility()
 
     filename = './output/year_sim/one_year_' + str(yearbegin) + '.pickle'

@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import godot
 from .VisibilityModel import VisibilityModel
 
 class Sphere():

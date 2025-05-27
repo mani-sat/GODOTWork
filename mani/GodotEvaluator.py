@@ -188,7 +188,7 @@ class GodotHandler:
 
 if __name__ == "__main__":
     import sys
-    universe_file = './universe2.yml'
+    universe_file = './universe.yml'
     import time
     t1 = time.perf_counter()
     ep1 = core.tempo.Epoch('2026-06-02T00:00:00 TDB')
@@ -200,11 +200,3 @@ if __name__ == "__main__":
     flags = [SEEnum.CLEAR_MOON_NN, SEEnum.SUN_ON_MOON]
     condition2 = (res.above_elev('CB11', 10.0) & res.has(flags))
     print(time.perf_counter() - t1)
-
-    # t1 = tempo.Epoch('2026-04-02T01:00:00 TDB')
-    # t2 = tempo.Epoch('2026-04-03T01:00:00 TDB')
-    # godotHandler = GodotHandler(t1, t2, 1.0, './universe2.yml')
-    # eg = godotHandler.get_event_grid()
-    # godotHandler.initialize_halo_orbit(eg,1000)
-    # results = godotHandler._evaluate_timestamps(eg)
-    # res = godotHandler._move_to_StateEvaluator(results, eg)

@@ -29,6 +29,10 @@ stations:
   - name: earthStations
     file: share/test/GroundStationsDatabase.json
 
+  # Create station database for Earth ground stations
+  - name: allborgStation
+    file: aalborgStation.json
+
 #! frames
 frames:
   - name: ephem1
@@ -54,6 +58,11 @@ frames:
     type: Stations
     config:
       source: earthStations
+
+  - name: stations2
+    type: Stations
+    config:
+      source: allborgStation
 
   - name: SC
     type: PointOrbit

@@ -1,0 +1,14 @@
+{
+    "Aalborg":
+    {
+        "stationAlias"                 :   ["AAU"],
+        "coordinates"                  :   ["3415.667 km", "601.414 km", "5343.433 km"],
+        "plateMotion"                  :   ["0 km/year","0 km/year","0 km/year"],
+        "refEpoch"                     : "2005-01-01T00:00:00.000 TDB",
+        "refCenter"                    : "Earth",
+        "refAxis"                      : "ITRF",
+        "mountingType"                 : "AZ/EL",
+        "heightAboveAntennaFoot"       : "0.0 m",
+        "dryOffset"                    : "0.0 m"
+    }
+}
