@@ -20,7 +20,7 @@ class SatState(enum.IntEnum):
 
 class StateEvaluator:
     def __init__(self, df: pd.DataFrame):
-        self.min_elevaion = 10.0
+        self.min_elevation = 10.0
         self.df = df
 
     def set_internal_min_elevation(self, min_elevation:np.float16):
@@ -32,7 +32,7 @@ class StateEvaluator:
         min_elevation : np.float16
             The elevation at which LOS is determined
         """
-        self.min_elevaion = min_elevation
+        self.min_elevation = min_elevation
 
     def elv(self, station: str) -> pd.Series:
         """
@@ -92,13 +92,13 @@ class StateEvaluator:
         """
         Add coloums containing the LOS states of the groundstations.
         """
-        los_nn = self.above_elev('NN11', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_NN])
+        los_nn = self.above_elev('NN11', self.min_elevation) & self.has([SEEnum.CLEAR_MOON_NN])
         if not ('los_nn' in self.df.keys()):
             self.df.insert(len(self.df.keys()),'los_nn',los_nn)
-        los_cb = self.above_elev('CB11', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_CB])
+        los_cb = self.above_elev('CB11', self.min_elevation) & self.has([SEEnum.CLEAR_MOON_CB])
         if not ('los_cb' in self.df.keys()):
             self.df.insert(len(self.df.keys()),'los_cb',los_cb)
-        los_mg = self.above_elev('MG11', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_MG])
+        los_mg = self.above_elev('MG11', self.min_elevation) & self.has([SEEnum.CLEAR_MOON_MG])
         if not ('los_mg' in self.df.keys()):
             self.df.insert(len(self.df.keys()),'los_mg',los_mg)
          
@@ -149,16 +149,33 @@ class StateEvaluator:
         """
         return self.df.keys()
     
-    def get_state(self):
+    def get_state(self, stations:list[str]):
         """
         Fetches the various flags, and returns the equivalent states
 
-        
+        Parameters
+        ----------
+        stations : list[str]
+            A list containing the station names that should be used for states.
+
+        Raises
+        ------
+        ValueError:
+            If stations contains no stations
+            If stations contains a station that is not either NN11, CB11 or MG11
         """
-        los_nn = self.above_elev('NN11', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_NN])
-        los_cb = self.above_elev('CB11', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_CB])
-        los_mg = self.above_elev('MG11', self.min_elevaion) & self.has([SEEnum.CLEAR_MOON_MG])
-        los = los_nn | los_cb | los_mg
+        if len(stations) == 0:
+            raise ValueError("No stations given. There must be a station")
+
+        station_dict = {'NN11':SEEnum.CLEAR_MOON_NN,
+                        'CB11':SEEnum.CLEAR_MOON_CB,
+                        'MG11':SEEnum.CLEAR_MOON_MG}
+        los = pd.Series([False]*len(self.df))
+        for station in stations:
+                try:
+                    los |= (self.above_elev(station, self.min_elevation) & self.has([station_dict[station]]))
+                except Exception as exc:
+                    raise ValueError("Station " + str(station) + " not allowed!") from exc
         som = self.has([SEEnum.SUN_ON_MOON])
         sos = self.has([SEEnum.SUN_ON_SPACECRAFT])
 
