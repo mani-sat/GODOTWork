@@ -284,7 +284,7 @@ if __name__=="__main__":
             log(f"Done optimizing for month:{month}")
 
             outages, end_buffer, total_cost, total_DL=optimizer.analyze("Optimization/"+data_folder, T_dl, Rdl, GS, T_gw, Rgw, c1, c2 ,rho)
-            extra_folder="final_results/Optim_results_gs"
+            # extra_folder="final_results/Optim_results_gs"
             extra_folder="Processing"
             with open(f'./{extra_folder}/results_summary_gw.txt', "a") as summary_file_eng:
                 summary_file_eng.write(f"{rho:.2f} & {station} & {total_cost:.3e} & {(end_buffer/1e9):.2f}GB & {(total_DL/1e9):.2f} \\\\\n")
