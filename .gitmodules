@@ -1,0 +1,3 @@
+[submodule "mani/HaloOrbit"]
+	path = mani/HaloOrbit
+	url = git@github.com:mani-sat/halo_orbit.git
