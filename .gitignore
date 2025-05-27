@@ -5,4 +5,6 @@ venv
 *.png
 
 __pycache__
-output/*
+output/
+development/
+GroundPlot/
